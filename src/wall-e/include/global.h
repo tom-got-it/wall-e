@@ -19,7 +19,7 @@
 //---------------------------------------------------------------
 
 //================= GLOBAL DEFINITIONS ==========================
-#define FIRMWARE_VERSION "2024.06.3"          //Put the firmware version here - just for info
+#define FIRMWARE_VERSION "2024.06.4"          //Put the firmware version here - just for info
 #define CALIBRATION_FILE "/calibrationData11" //Interal filename for the calibrated display data
 #define REPEAT_CAL false                      //Repeat display calibration
 #define INIT_CLOCK false                      //Only required when clock-battery is changed or the clock was reset before
