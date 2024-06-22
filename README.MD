@@ -13,7 +13,7 @@ The main reason for changing the base model was safety concerns regarding the li
 
 The required modified print-STL-files can be found here:
 
-(URL will follow)
+<https://www.printables.com/de/model/919983-wall-e-robot-alarm-clock-remix>
 
 Here is a video clip of my Wall-E alarm clock in action :-)
 
@@ -412,7 +412,7 @@ For the back-part you will need my modified STL file. This modified model allows
 
 Additionally I prepared three stackable inlays. This will help to increase product safety. Since the charger can get quite warm, I recommend to print the inlays with PETG. You can find the modified files here:
 
-(URL will follow)
+<https://www.printables.com/de/model/919983-wall-e-robot-alarm-clock-remix>
 
 For painting the model, follow the original instructions.
 
