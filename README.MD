@@ -17,9 +17,7 @@ The required modified print-STL-files can be found here:
 
 Here is a video clip of my Wall-E alarm clock in action :-)
 
-<video width="320" height="240" controls>
-  <source src="./images/walle-clip.mp4" type="video/mp4">
-</video>
+[![Video clip](./images/robot-1.jpg)](./images/walle-clip.mp4 "Video clip") 
 
 ## Credits
 
