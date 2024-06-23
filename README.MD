@@ -39,11 +39,11 @@ Feel free to adapt, modify and share the source code. Leave me a star in github,
 |    |    |    |
 |----|----|----|
 |  ![Robot-Image](./images/robot-1.jpg) |  ![Robot-Image](./images/robot-2-light.jpg) |  ![Robot-Image](./images/robot-3.jpg) |
-|  ![Robot-Image](./images/robot-7-front.jpg) |  ![Robot-Image](./images/robot-9-alarm-light.jpg) |  ![Robot-Image](./images/robot-10-alarm-setup.jpg) |
-|  ![Robot-Image](./images/robot-11-notification.jpg) |  ![Robot-Image](./images/robot-12-volume.jpg) |  ![Robot-Image](./images/robot-6-back.jpg) |
+|  ![Robot-Image](./images/robot-7-front.jpg) |  ![Robot-Image](./images/alarm-light-setup.jpg) |  ![Robot-Image](./images/mp3-player.jpg) |
+|  ![Robot-Image](./images/notifications.jpg) |  ![Robot-Image](./images/robot-12-volume.jpg) |  ![Robot-Image](./images/robot-6-back.jpg) |
 |  ![Robot-Image](./images/robot-14.jpg) |  ![Robot-Image](./images/robot-15-light.jpg) |  ![Robot-Image](./images/robot-13-light.jpg) |
 |  ![Robot-Image](./images/inlay-l1-el.jpg) |  ![Robot-Image](./images/inlay-l2-el.jpg) |  ![Robot-Image](./images/top_view_el.jpg) |
-|  ![Robot-Image](./images/top_view_el_no_bat.jpg) |    |    |
+|  ![Robot-Image](./images/top_view_el_no_bat.jpg) | ![Robot-Image](./images/main-menu.jpg)  |    |
 
 ## Feature Overview
 
@@ -91,6 +91,7 @@ The following components can be used from Jérôme's base model. Please purchase
   * make sure a flyback diode is integrated (should always be the case, though)
 * Micro SD Card <=16GB
   * used to store the MP3s
+  * SD-cards > 16GB might work when setting the partition to allocate <=16GB of memory
 * Mini MP3 Player Module
   * there are several modules on the marked - each with certain limitations
   * I tested with several “MP3-TF-16P v3.0“ modules which work quite good
@@ -121,7 +122,6 @@ Due to my modifications, you will need the following additional hardware:
     * make sure to buy the “5V module” version
 * Self-Locking 27mm on/off switch, 2PIN, must support at least 1A
   * <https://www.amazon.de/dp/B0D1G6Y3FS>
-* Adafruit INA260 power sensor
 * M3 non-conducting screws and nuts to fix the charger in place
   * I used nylon screws
 
@@ -130,9 +130,13 @@ Due to my modifications, you will need the following additional hardware:
 Optional components:
 
 * 18650 Lithium-Ion battery > 2000mAH
+    * For a suitable battery, take a look at the chapter "Power Consumption" below.
+    * I use a quality battery having 3200mAH. It lasts for about 40 to 50 hours (Light bulb not used, most time in stand-by).
     * The charger will charge the battery with 1A at max. Most 18650 batteries support charging with 0.5C. Make sure the battery supports that.
     * The charger has a built-in undervoltage and overvoltage protection. If you want additional safety, you can buy a battery that has an additional integrated protection circuit. Most 18650 batteries don’t have this additional circuit.
     * Make sure to read general safety recommendations when handling with lithium batteries.
+* Adafruit INA260 power sensor
+    * If the INA260 is not present, the software will assume that the system is powered by USB
 * Cables to connect the battery to the charger
     * Depends on the battery and connection type
     * Make sure to use cables having 22AWG or better
@@ -155,7 +159,7 @@ I will explain the reasons for changing some of the original hardware in this ch
 
 
 ### Battery Charger
-The original version used a battery charger that (as far as I can tell as a non-expert) is not made for charging the battery and powering the robot at the same time. Internally, the same circuit is used for charging the battery and powering the system. The charger will not be able to detect when the battery is fully charged. The battery fill float around the maximum voltage and never stop charging. This leads to safety problems and a decreased battery lifetime. You can ready more about this here:
+The original version used a battery charger that (as far as I can tell as a non-expert) is not made for charging the battery and powering the robot at the same time. Internally, the same circuit is used for charging the battery and powering the system. The charger will not be able to detect when the battery is fully charged. The battery fill float around the maximum voltage and never stop charging. This leads to safety problems and a decreased battery lifetime. You can read more about this here:
 <https://emariete.com/en/co2-meter-with-battery-well-done/>
 
 Within the original version there neither was a 5V boost integrated. The system was powered by battery voltage. This can lead to instabilities of the ESP32, as the supplied voltage will vary depending on the battery charge level. 
@@ -178,6 +182,22 @@ It took me a long time to find a better and more safe battery charger. The batte
 Within the original version, battery voltage was monitored by the ESP32 ADC (analog digital converter). However, measuring the voltage by the ESP32 is not very accurate. Furthermore I wanted to monitor the electric current leaving the battery.
 
 For these reasons I switched to the Adafruit INA260 sensor. It allows to monitor the battery voltage and current at the same time. This also allowed me to distinguish whether the system is powered by USB (battery current around 0mA if the battery is charged) or if the system does charge the battery (battery current is negative).
+
+## Power consumption
+I did a lot of tests and measured the power consumption in different system states. The power was measured at the battery before entering the 5V boost. This is important because the boost-module will add a little overheat. Note that the boost module can supply a constant maximum of 1A. When modifying the hardware you should take this into account.
+
+### Deep Sleep / Stand-By
+In this state the ESP32 is in Deep-Sleep mode and the display backlight is turned off. This mode will automatically get active, when the user is not interacting with the system after a certain amount of time. The system will wake-up once an alarm fires or the user touches the display. The power consumption is between <strong>45 and 60mA</strong>. This heavily depends on the components used. As an example, I tested two different MP3 modules. Although having the same chip, the power consumption differed to a small degree. Officially, the MP3 module supports a sleep mode, as well. I was able to put the module into sleep mode. However, the module did not wake up when sending commands. It is known that these MP3 modules are a little restive and not always strictly follow the specifications. I gave up putting the MP3 module into sleep mode. Further power can be saved when de-soldering the LEDs of the components. As the LED of the relay was quite bright, I de-soldered it. I left all other LEDs in place.
+
+
+### Normal operation
+In normal operation, all components except the light bulb and MP3 playback are active. The system uses between <strong>250 and 300mA</strong>.
+
+### MP3 playback
+Add another <strong>70 to 150mA</strong> to the normal operation mode power consumption. This heavily depends on the MP3 and playback volume.
+
+### Light Bulb
+I use a different light bulb as described above, since no 5V light bulb was available when I assembled my Wall-E. Add another <strong>400 to 500mA</strong> to the normal operation mode power consumption.
 
 
 ## Hardware Setup
@@ -208,6 +228,8 @@ I decided to be able to switch off power. To do so, solder an On/Off-switch to t
 I always like to power-off the robot when I am not at home (although note that the battery will still be discharged by 1mA by the safety circuits). It would be quite cumbersome to program the clock and the alarm each time when powering-on the system again. The RTC module has the option to operate with a CR2032 battery when no other power source is available. That is great. However, the RTC has a build in charger and will try to charge the CR2032 battery (which is not possible and therefore unsafe). To disable the onboard-charger of the RTC you have to de-solder resistor R4 (may have a different name on your component) or the diode as shown in the image below. Further details can be found here:
 <https://www.onetransistor.eu/2019/07/zs042-ds3231-battery-charging-circuit.html>
 
+Do not forget to put the battery inside before assembling the robot ;-)
+
 <img src="./images/rtc-desolder.png" alt="robot-image" width="800"/>
 
 ### TFT preparation
@@ -216,6 +238,9 @@ As described in the picture, certain PINs of the TFT display must be connected t
 Please note that the TFT can operate at 5V and 3.3V. In our case we have 5V. On the back of the display there is a small jumper "J1". Make sure that it is <strong>not</strong> soldered. Otherwise the TFT will run in 3.3V mode:
 
 <img src="./images/tft.png" alt="robot-image" width="800"/>
+
+### 5V Relay-Module
+There is no real need to solder the relay. However, the LED of my relay was so bright that it shined through the printed parts. Therefore, I de-soldered it.
 
 ### MP3 preparation
 Use an empty SD-card and place at least one MP3 on it with the following structure (filenames and folder-names are really important):
@@ -229,7 +254,8 @@ Place the SD-card into the MP3 player module.
 
 Note:
 * The SD-card must be formatted using FAT32
-* The SD-card must not exceed 16GB
+* The partition must not exceed 16GB
+  * I successfully tested with a 32GB SD card and a 16GB partition.
 * Double check the file- and folder-names if MP3s are not played
 
 
@@ -333,9 +359,6 @@ Some details:
 * For over-the-air updates, enter your WiFi SSID and password. You also must set the WiFi security settings accordingly (WPA2, WPA3,...).
 * Verify that the GPIO-Pin-Settings are correct
 
-### Texts and Translations
-Most display-texts currently are in german. Feel free to translate the texts within the ".ino" files. When printed to the TFT, the x-positions might need some corrections.
-
 ### Animated GIFs
 When powering the system up the first time and on each alarm, a GIF animation is shown on the display. Due to copyright reasons I did not include the GIF.
 Follow these steps to include a nice GIF animation:
@@ -384,22 +407,19 @@ Afterwards the code should compile and can be transferred to the ESP32. The ESP3
 * clock and alarm
 * sleep-mode and wake-up
 
+Note that you can use the Serial Monitor from the Arduino IDE to get debug output from the ESP32. This might be quite helpful to solve possible problems.
+
 ### Extended Tests
 First unplug the ESP32 from the USB connection. Then setup all other hardware. Keep the battery disconnected for the first tests. Power the charger by USB (do not connect the ESP32 to USB!). Everything should work now.
 
-After testing everything, test if battery operation works, as well. Especially test if the battery is charged and if charging stops a 4.2V.
+After testing everything, test if battery operation works, as well. Especially test if the battery is charged and if charging stops at 4.2V. At least for the first charge process I recommend to place the battery within a LiPo safety bag. Check a couple of time whether the battery is getting hot - this should not be the case.
 
 
 ## Over the Air Udates
 The system supports over-the-air (OTA) updates by WiFi. As explained above, you must configure your SSID and WiFi password.
-To put the robot into OTA-mode, touch three times in a row onto the main screen at the following place:
+To put the robot into OTA-mode, go to the main menu (the Plus-Button on the main-screen) and then select "Firmware". Then, the firmware update screen is shown. The ESP32 will try to start WiFi and also print the URL for updates. Open that URL in a browser and upload a new firmware file. To create a firmware file, click in the Arduino IDE at "sketch->Export compiled Binary". The "bin"-file with the name of your project is the firmware-file.
 
-<img src="./images/ota-1.png" alt="robot-image" width="400"/>
-
-
-After touching the screen three times, the firmware update screen is shown. The ESP32 will try to start WiFi and also print the URL for updates. Open that URL in a browser and upload a new firmware file. To create a firmware file, click in the Arduino IDE at "sketch->Export compiled Binary". The "bin"-file with the name of your project is the firmware-file.
-
-<img src="./images/updates.jpg" alt="robot-image" width="400"/>
+<img src="./images/firmware-updates.jpg" alt="robot-image" width="400"/>
 
 
 ## Printing the Model
@@ -426,7 +446,11 @@ Follow the original instructions and glue everything <strong>apart from the main
 
 For the main-body it is sufficient to only glue the <strong>back</strong> and <strong>side-walls</strong> to the <strong>bottom</strong> as shown in the image below (not yet glued within my image). When glueing you should place the top and front-plate as well (without glue) such that everything fits together afterwards.
 
-When the back and side-walls are glued, start placing the inlays and put the hardware inside. The charger can be screwed onto the first inlay and to the back-part using M3 nylon screws. I used the following layout (starting from layer 1 to 3 from left to right):
+When the back and side-walls are glued, start placing the inlays and put the hardware inside. The charger can be screwed onto the first inlay and to the back-part using M3 nylon screws. I used the following layout (starting from layer 1 to 3 from left to right - see below).
+
+<strong>Remark:</strong>
+The real time clock (RTC) is quite hard to reach once everything is put together. Make sure to put a CR2032 battery in it, if you want to use it ;-) The battery should last a couple of years (at least I hope so...).
+
 
 |    |    |    |
 |----|----|----|
@@ -436,7 +460,8 @@ When the back and side-walls are glued, start placing the inlays and put the har
 
 Note that I did not glue the front-side and the top-plate. This allows me to easily access the components when something is wrong. The front-part can be lifted upwards and taken apart:
 
-<img src="./images/front-uplift.jpg" alt="robot-image" width="400"/>
+<img src="./images/front-uplift.jpg" alt="robot-image" width="300"/>
+<img src="./images/front-view-open.jpg" alt="robot-image" width="300"/>
 
 ## Final words
 It was fun building the robot. I hope you will enjoy it as well.

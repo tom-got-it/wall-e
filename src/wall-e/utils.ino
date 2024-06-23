@@ -7,7 +7,21 @@ int drawTwoDigitsAndGetXPos(uint8_t number, int xPos, int yPos, const int font) 
 void drawWaitingScreen() {
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_MAIN_COLOR);
-  tft.drawString("Einen Augenblick bitte...", 20, 90, TFT_BIG_FONT);
+  tft.drawString("Just one moment please...", 10, 90, TFT_BIG_FONT);
+}
+
+void drawVoltageWarningScreen() {
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_RED);
+  tft.drawString("Battery voltage is low...", 25, 90, TFT_BIG_FONT);
+  tft.setTextColor(TFT_MAIN_COLOR);
+}
+
+void drawNoWiFiWarningScreen() {
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_RED);
+  tft.drawString("WiFi is not configured...", 25, 90, TFT_BIG_FONT);
+  tft.setTextColor(TFT_MAIN_COLOR);
 }
 
 boolean checkTouch(uint16_t x, uint16_t y, const int xRange[], const int yRange[]) {
@@ -111,6 +125,17 @@ void fillArc(int x, int y, int start_angle, int seg_count, int rx, int ry, int w
 String padByZeroTwoDigits(int in) {
   String out = "";
   if(in < 10) {
+    out = out + "0";
+  }
+  out = out + String(in);
+  return out;
+}
+
+String padByZeroThreeDigits(int in) {
+  String out = "";
+  if(in < 10) {
+    out = out + "00";
+  } else if (in < 100) {
     out = out + "0";
   }
   out = out + String(in);

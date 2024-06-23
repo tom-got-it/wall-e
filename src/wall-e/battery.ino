@@ -17,6 +17,10 @@ float getBatCurrentMillis() {
   return -1;
 }
 
+boolean isBatteryLowVoltage() {
+  return !isOnUsbPower() && getBatVoltage() <= gLowVoltage;
+}
+
 boolean isOnUsbPower() {
   return getBatCurrentMillis() <= 5;
 }

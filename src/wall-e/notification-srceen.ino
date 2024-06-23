@@ -8,30 +8,30 @@ void showNotificationScreen() {
 
   tft.setTextColor(TFT_RED);
   if(missedAlarmNotification) {
-    tft.drawString("Sie haben einen Weck-Alarm verpasst.", 40, 10, TFT_SMALL_FONT);
+    tft.drawString("You missed an alarm.", 40, 10, TFT_SMALL_FONT);
   }
 
   if(rtcLostPowerNotification) {
-    tft.drawString("Die Uhr hatte keinen Strom.", 40, 30, TFT_SMALL_FONT);
+    tft.drawString("The clock did not have power.", 40, 30, TFT_SMALL_FONT);
   }
 
   if(mp3TrackCount <= 0) {
-    tft.drawString("Keine MP3s zum Abspielen gefunden.", 40, 50, TFT_SMALL_FONT);
+    tft.drawString("No MP3 files were found.", 40, 50, TFT_SMALL_FONT);
   }
   tft.setTextColor(TFT_MAIN_COLOR);
 
-  String startStr = "Eingeschaltet am " + getFormattedTime(firstBootTime, false) + ".";
+  String startStr = "Turned on at " + getFormattedTime(firstBootTime, false) + ".";
   tft.drawString(startStr, 40, 70, TFT_SMALL_FONT);
 
-  String bootStr = String(bootCount) + " Mal aus Standby aufgewacht.";
+  String bootStr = String(bootCount) + " times woke up from standby.";
   tft.drawString(bootStr, 40, 90, TFT_SMALL_FONT);
 
   timezone_change nextTsChange = getNextTimezoneChangeElseFirst();
   String timezoneStr = "";
   if(rtc.now().unixtime() < nextTsChange.when.unixtime()) {
-    timezoneStr = "Zeitumstellung am " + getFormattedTime(nextTsChange.when, false) + ".";
+    timezoneStr = "Next time-change at " + getFormattedTime(nextTsChange.when, false) + ".";
   } else {
-    timezoneStr = "Nächste Zeitumstellung nicht gepflegt";
+    timezoneStr = "No time-changes by timezone configured";
   }
   tft.drawString(timezoneStr, 40, 110, TFT_SMALL_FONT);
 

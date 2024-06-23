@@ -61,7 +61,7 @@ byte doAlarmSetup() {
   Serial.println("Setup alarm");
 
   printCommonItems(SETUP_MODE_ALARM);
-  tft.drawString("Wecker", 110, 10, TFT_BIG_FONT);
+  tft.drawString("Alarm", 112, 10, TFT_BIG_FONT);
 
   return executeSetupLoopAlarm();
 }
@@ -70,7 +70,7 @@ byte doLightSetup() {
   Serial.println("Setup light bulb on alarm");
 
   printCommonItems(SETUP_MODE_LIGHT);
-  tft.drawString("Wecker-Licht", 80, 10, TFT_BIG_FONT);
+  tft.drawString("Alarm-Light", 90, 10, TFT_BIG_FONT);
 
   return executeSetupLoopLight();
 }
@@ -79,7 +79,7 @@ byte doClockSetup() {
   Serial.println("Setup clock");
 
   printCommonItems(SETUP_MODE_CLOCK);
-  tft.drawString("Zeit", 130, 10, TFT_BIG_FONT);
+  tft.drawString("Time", 120, 10, TFT_BIG_FONT);
 
   return executeSetupLoopClock();
 }
@@ -88,7 +88,7 @@ byte doDateSetup() {
   Serial.println("Setup date");
 
   printCommonItems(SETUP_MODE_DATE);
-  tft.drawString("Datum", 110, 10, TFT_BIG_FONT);
+  tft.drawString("Date", 120, 10, TFT_BIG_FONT);
 
   return executeSetupLoopDate();
 }
@@ -219,14 +219,14 @@ byte executeSetupLoopLight() {
       printRect(&rSetupReset, TFT_BLACK, true);
 
       if(lightBulbDelaySecondsOnAlarm < 0) {
-        tft.drawString("aus", 130, 115, TFT_BIG_FONT);
+        tft.drawString("off", 130, 115, TFT_BIG_FONT);
       } else if (lightBulbDelaySecondsOnAlarm == 0) {
-        tft.drawString("an", 130, 115, TFT_BIG_FONT);
+        tft.drawString("on", 130, 115, TFT_BIG_FONT);
       } else {
-        String str = "nach ";
+        String str = "after ";
         str = str + lightBulbDelaySecondsOnAlarm;
-        str = str + " Sekunden";
-        tft.drawString(str, 40, 115, TFT_BIG_FONT);
+        str = str + " seconds";
+        tft.drawString(str, 55, 115, TFT_BIG_FONT);
       }
       reprint = false;
     }

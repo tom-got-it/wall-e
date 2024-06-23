@@ -160,13 +160,14 @@ void setupRTC() {
 void setupMp3() {
   Serial.println("--------Setup MP3 Module----------");
 
+  initMp3Utils();
+
   FPSerial.begin(9600, SERIAL_8N1, PIN_MP3_RX, PIN_MP3_TX);
   myMP3.begin(FPSerial, false, 500);
 
   //Test the connection (only on first boot)
   if(bootCount == 1) {
-    delay(500);
-    mp3TrackCount = myMP3.numSdTracks();
+    mp3TrackCount = getMp3TrackCount();
     Serial.print("MP3 track count: ");
     Serial.println(mp3TrackCount);
     if(bootCount == 1 && mp3TrackCount <= 0) {
@@ -179,9 +180,8 @@ void setupMp3() {
       delay(8000);
       drawEmptyMainScreen();
     }
-    myMP3.volume(notificationVolume);
-    delay(1000);
-    myMP3.playFolder(1, random(1, min(gMp3CountInitSound, mp3TrackCount) + 1));
+    setMp3Volume(notificationVolume);
+    playMp3RandomBootSound();
   }
 
   //No option to wakeup :/
@@ -222,11 +222,10 @@ void setupBatterySensor() {
 void setupFirstBoot() {
   Serial.println("--------Setup first boot----------");
 
-  firstBootTime = rtc.now();
-  lastTimezoneChange = rtc.now();
-
   drawWalleGifMain();
   delay(1000);
+  firstBootTime = rtc.now();
+  lastTimezoneChange = rtc.now();
 }
 
 void prepareWebServer() {

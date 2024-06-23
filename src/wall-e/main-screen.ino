@@ -28,8 +28,14 @@ const rect rResetNotificationCenter = {0, 0, 50, 50};
 const int xRangeLightBulb[] = {100, 170};
 const int yRangeLightBulb[] = {50, 120};
 
+const int xPosMenuCenter = 30;
+const int yPosMenuCenter = 77;
+const rect rMenuTouch = {0, 57, 50, 40};
+
+const rect rMp3Player = {15, 60, 25, 30};
+
 const int xRangeFirmwareupdateInvisible[] = {0, 80};  //this is invisible - updates are triggered after 3x touching this place
-const int yRangeFirmwareupdateInvisible[] = {60, 110};
+const int yRangeFirmwareupdateInvisible[] = {100, 140};
 
 
 //------------CLOCK and ALARM snf VOLTAGE----------------
@@ -49,7 +55,7 @@ int lastPrintedVoltageBarCount = -3; //-1 = on USB, -2 = charging battery
 boolean printedNotification = false;
 boolean wasUrgentNotificationBefore = false;
 
-int touchCountFirmwareUpdate = 0;
+boolean printedMenu = false;
 //-------------------------------------------
 
 
@@ -58,6 +64,7 @@ void rePrintMainScreen() {
   printedAlarm = false;
   printedBatteryData = false;
   printedNotification = false;
+  printedMenu = false;
 
   clearScreen();
   tft.drawBitmap(0, 0, epd_bitmap_Interface_2, 320, 240, TFT_MAIN_COLOR);
@@ -70,6 +77,7 @@ void printMainScreen() {
   printAlarmToggle();
   printBatteryData();
   printNotification();
+  printMenu();
 }
 
 void printClock() {
@@ -276,6 +284,14 @@ void printNotification() {
   }
 }
 
+void printMenu() {
+  if(! printedMenu) {
+    fillArc(xPosMenuCenter, yPosMenuCenter, 0, 60, 15, 15, 1, TFT_MAIN_COLOR);
+    tft.drawString("+", xPosMenuCenter - 5, yPosMenuCenter - 12, TFT_BIG_FONT);
+    printedMenu = true;
+  }
+}
+
 //----------Alarm fired on main screen-------
 void handleMainAlarm() {
     if(testAndShowAlarmScreen()) {
@@ -333,17 +349,13 @@ void handleMainTouch() {
       handleLightBulb();
     }
 
-    if(checkTouch(x, y, xRangeFirmwareupdateInvisible, yRangeFirmwareupdateInvisible)) {
-      touchCountFirmwareUpdate++;
-      Serial.print("touched firmware update - events: ");
-      Serial.println(touchCountFirmwareUpdate);
-      if(touchCountFirmwareUpdate == 3) {
-        //Note that we do leave this loop while showing the update screen - this is special
-        touchCountFirmwareUpdate = 0;
-        showFirmwareUpdateScreen();
+    if(touchedRect(x, y, &rMenuTouch)) {
+      Serial.println("touched menu icon");
+      showMenuScreen();
+
+      if(! isFirmwareUpdateInProgress) {
+        rePrintMainScreen();
       }
-    } else {
-      touchCountFirmwareUpdate = 0;
     }
 
     lastToched = rtc.now();
@@ -365,7 +377,7 @@ void handleLightBulb() {
       return;
     }
 
-    boolean stillActive = testWhileLightBulbActive();
+    boolean stillActive = testLightBulbStillActive();
     if(! stillActive) {
       return;
     }

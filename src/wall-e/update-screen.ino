@@ -1,6 +1,6 @@
 const rect rUpdateBack = {80, 170, 160, 50};
 const rect rUpdateStatusClear = {0, 0, 320, 150};
-const int xUpdateBack = 110;
+const int xUpdateBack = 120;
 const int yUpdateBack = 185;
 
 enum update_status {
@@ -21,6 +21,8 @@ unsigned long otaProgressMillis = 0;
 
 void showFirmwareUpdateScreen() {
   if(! isWiFiConfigured()) {
+    drawNoWiFiWarningScreen();
+    delay(3000);
     return;
   }
 
@@ -82,8 +84,8 @@ void printStatusInit() {
   }
 
   clearScreen();
-  tft.drawString("Starte WLAN und Server...", 40, 30, TFT_SMALL_FONT);
-  printUpdateExitButton("Abbruch");
+  tft.drawString("Starting WiFi and Server...", 40, 30, TFT_SMALL_FONT);
+  printUpdateExitButton("Abort");
   Serial.println("Init update...");
 
   updateStatusLastPrinted = INIT;
@@ -95,7 +97,7 @@ void printStatusWifiConnected() {
   }
 
   printRect(&rUpdateStatusClear, TFT_BLACK, true);
-  tft.drawString("Bereit um Updates zu empfangen...", 40, 30, TFT_SMALL_FONT);
+  tft.drawString("Ready to receive updates...", 40, 30, TFT_SMALL_FONT);
 
   String url = "";
   url = "URL: http://";
@@ -114,7 +116,7 @@ void printStatusUpdateAvailable() {
   }
 
   printRect(&rUpdateStatusClear, TFT_BLACK, true);
-  tft.drawString("Bereit um Updates zu empfangen...", 40, 30, TFT_SMALL_FONT);
+  tft.drawString("Ready to receive updates...", 40, 30, TFT_SMALL_FONT);
 
   String url = "";
   url = "URL: http://";
@@ -122,7 +124,7 @@ void printStatusUpdateAvailable() {
   url = url + "/update";
   tft.drawString(url, 40, 70, TFT_SMALL_FONT); 
 
-  tft.drawString("Update angekündigt...", 40, 110, TFT_SMALL_FONT);
+  tft.drawString("Update available...", 40, 110, TFT_SMALL_FONT);
 
   Serial.println("Update is available and will be downloaded...");
 
@@ -135,7 +137,7 @@ void printStatusUpdateIncoming() {
   }
 
   printRect(&rUpdateStatusClear, TFT_BLACK, true);
-  tft.drawString("Bereit um Updates zu empfangen...", 40, 30, TFT_SMALL_FONT);
+  tft.drawString("Ready to receive updates...", 40, 30, TFT_SMALL_FONT);
 
   String url = "";
   url = "URL: http://";
@@ -143,7 +145,7 @@ void printStatusUpdateIncoming() {
   url = url + "/update";
   tft.drawString(url, 40, 70, TFT_SMALL_FONT); 
 
-  tft.drawString("Update wird geladen...", 40, 110, TFT_SMALL_FONT);
+  tft.drawString("Downloading update...", 40, 110, TFT_SMALL_FONT);
 
   Serial.println("downloading update...");
 
@@ -157,7 +159,7 @@ void printStatusUpdateError() {
 
   printRect(&rUpdateStatusClear, TFT_BLACK, true);
 
-  tft.drawString("Bereit um Updates zu empfangen...", 40, 30, TFT_SMALL_FONT);
+  tft.drawString("Ready to receive updates...", 40, 30, TFT_SMALL_FONT);
 
   String url = "";
   url = "URL: http://";
@@ -166,9 +168,9 @@ void printStatusUpdateError() {
   tft.drawString(url, 40, 70, TFT_SMALL_FONT); 
 
   tft.setTextColor(TFT_RED);
-  tft.drawString("Update fehlgeschlagen", 40, 110, TFT_SMALL_FONT);
+  tft.drawString("Update failed", 40, 110, TFT_SMALL_FONT);
   tft.setTextColor(TFT_MAIN_COLOR);
-  printUpdateExitButton("Neustart");
+  printUpdateExitButton("Reboot");
 
   Serial.println("Error downloading update...");
 
@@ -182,7 +184,7 @@ void printStatusUpdateSuccess() {
 
   printRect(&rUpdateStatusClear, TFT_BLACK, true);
 
-  tft.drawString("Bereit um Updates zu empfangen...", 40, 30, TFT_SMALL_FONT);
+  tft.drawString("Ready to receive updates...", 40, 30, TFT_SMALL_FONT);
 
   String url = "";
   url = "URL: http://";
@@ -191,9 +193,9 @@ void printStatusUpdateSuccess() {
   tft.drawString(url, 40, 70, TFT_SMALL_FONT); 
 
   tft.setTextColor(TFT_GREEN);
-  tft.drawString("Update erflogreich empfangen", 40, 110, TFT_SMALL_FONT);
+  tft.drawString("Update received successfully", 40, 110, TFT_SMALL_FONT);
   tft.setTextColor(TFT_MAIN_COLOR);
-  printUpdateExitButton("Neustart");
+  printUpdateExitButton("Reboot");
 
   Serial.println("Success downloading update...");
 

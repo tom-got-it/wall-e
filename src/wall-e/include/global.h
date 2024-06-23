@@ -19,21 +19,24 @@
 //---------------------------------------------------------------
 
 //================= GLOBAL DEFINITIONS ==========================
-#define FIRMWARE_VERSION "2024.06.4"          //Put the firmware version here - just for info
-#define CALIBRATION_FILE "/calibrationData11" //Interal filename for the calibrated display data
+#define FIRMWARE_VERSION "2024.06.5"          //Put the firmware version here - just for info
+#define CALIBRATION_FILE "/calibrationData11" //Internal filename for the calibrated display data - no need to modify this
 #define REPEAT_CAL false                      //Repeat display calibration
 #define INIT_CLOCK false                      //Only required when clock-battery is changed or the clock was reset before
-#define WIFI_SSID ""
-#define WIFI_PWD ""
+#define WIFI_SSID ""                          //Required optionally for over-the-air updates
+#define WIFI_PWD ""                           //Required optionally for over-the-air updates
 //===============================================================
 
 //================= OTHER CONSTANTS =============================
 const int gSleepSecondsAfterTouched = 40;             //after the last touch event the time is monitored. If x seconds past and no further touch event occured the ESP32 will go to sleep mode (=standby)
-const int gVoltageReprintAfterSeconds = 2;            //interval to read and print battery voltage
-const int gAlarmAutoShutdownSeconds = 120;            //an active alarm will be turned off after this time has passed
+const int gVoltageReprintAfterSeconds = 2;            //interval to read and print battery voltage (if no battery is connected, will reprint "USB")
+const int gAlarmAutoShutdownSeconds = 120;            //an active alarm will be turned off after this time has passed and the user did not interact
+const int gDefaultNotificationVolume = 17;            //Default MP3 playback volume on alarm
 const int gDefaultLightBulbDelaySeconds = 0;          //x seconds after the alarm starts, the light bulb will turn on (-1 = light always off at alarm, 0 = immediate on at alarm)
-const int gLightBulbAutoShutdownSeconds = 30;         //when the light bulb is turned on, it will shutdown after the given seconds (safety faeture)
-const float gLowVoltage = 3.4;                        //light bulb will be disabled on alarm when the battery voltage drops below this level
+const int gLightBulbAutoShutdownSeconds = 30;         //when the light bulb is turned on, it will shutdown after the given seconds (safety feature)
+const float gLowVoltage = 3.4;                        //light bulb will be disabled when the battery voltage drops below this level
+const float gMp3PlayerLowVoltage = 3.2;               //When using the MP3 player, it will stop and go back to the main screen, once this voltage is reached. This allows the system to go to standby.
+const int gMp3PlayerDisplayAutoShutdownSeconds = 15;  //When the Display is set to "Auto" mode, the MP3 player will turn off the display when no interaction occured for x seconds
 const int gMp3CountInitSound = 2;                     //the first two MP3s are played only at first boot
 
 const wifi_auth_mode_t gWifiSecurityMode = WIFI_AUTH_WPA2_WPA3_PSK;   //WiFi Security Mode
@@ -67,18 +70,18 @@ const gpio_num_t PIN_RTC_IRQ = GPIO_NUM_27;
 const gpio_num_t PIN_MP3_RX = GPIO_NUM_16;
 const gpio_num_t PIN_MP3_TX = GPIO_NUM_17;
 const gpio_num_t PIN_LIGHT_BULB = GPIO_NUM_25;
-const gpio_num_t PIN_BATTERY_SENSOR_SDA = GPIO_NUM_13;  //Adafruit BAT-Sensor
-const gpio_num_t PIN_BATTERY_SENSOR_SCL = GPIO_NUM_26;  //Adafruit BAT-Sensor
+const gpio_num_t PIN_BATTERY_SENSOR_SDA = GPIO_NUM_13;  //Adafruit BAT-Sensor (will automaticcaly be ignored if the sensor is not connected - do not modify)
+const gpio_num_t PIN_BATTERY_SENSOR_SCL = GPIO_NUM_26;  //Adafruit BAT-Sensor (will automaticcaly be ignored if the sensor is not connected - do not modify)
 const uint64_t WAKEUP_BITMASK_RTC = 0x8000000; // PIN27
 //===============================================================
 
 
-//================= RTC KEPT VARS ===============================
+//= ESP32 RTC KEPT VARS (will be preserved in Deep-Sleep mode) ===
 RTC_DATA_ATTR DateTime firstBootTime;
 RTC_DATA_ATTR DateTime lastTimezoneChange;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR boolean isAlarmActive = true;
-RTC_DATA_ATTR int notificationVolume = 17;
+RTC_DATA_ATTR int notificationVolume = gDefaultNotificationVolume;
 RTC_DATA_ATTR int mp3TrackCount = 0;
 RTC_DATA_ATTR int showBatteryStatistics = 0;  //1=show voltage, 2=show current
 RTC_DATA_ATTR int lightBulbDelaySecondsOnAlarm = gDefaultLightBulbDelaySeconds;

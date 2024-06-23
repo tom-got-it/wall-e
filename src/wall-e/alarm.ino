@@ -1,3 +1,7 @@
+boolean hasAlarmFired() {
+  return rtc.alarmFired(1) && isAlarmActive;
+}
+
 void toggleAlarm() {
   DateTime alarm = rtc.getAlarm1();
 

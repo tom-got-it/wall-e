@@ -30,13 +30,12 @@ void showAlarmScreen() {
 
   clearScreen();
 
-  boolean lightBulbActive = false;
-  boolean lightForceOff = false;
+  boolean lightBulbWasActive = false;
   if(lightBulbDelaySecondsOnAlarm == 0) {
-    lightBulbActive = startLightBulb();
+    lightBulbWasActive = startLightBulb();
   }
 
-  playAlarmMp3();
+  playMp3RandomAlarm();
   drawWalleGifMain();
   delay(1000);
 
@@ -50,18 +49,12 @@ void showAlarmScreen() {
       return;
     }
 
-    boolean isPlaying = myMP3.isPlaying();
-    delay(1000);
-
+    boolean isPlaying = isMp3Playing();
     DateTime now = rtc.now();
 
-    if(lightBulbActive) {
-      lightBulbActive = testWhileLightBulbActive();
-      if(! lightBulbActive) {
-        lightForceOff = true;  //make sure to not turn on the light bulb again
-      }
-    } else if(! lightForceOff && lightBulbDelaySecondsOnAlarm > 0 && alarmStart.unixtime() + lightBulbDelaySecondsOnAlarm <= now.unixtime()) {
-      lightBulbActive = startLightBulb();
+    testLightBulbStillActive();
+    if(! lightBulbWasActive && lightBulbDelaySecondsOnAlarm > 0 && alarmStart.unixtime() + lightBulbDelaySecondsOnAlarm <= now.unixtime()) {
+      lightBulbWasActive = startLightBulb();
     }
 
     if(isExitByTouch()) {
@@ -76,8 +69,7 @@ void showAlarmScreen() {
       return;
     } else {
       if(! isPlaying) {
-        playAlarmMp3();
-        delay(1000);
+        playMp3RandomAlarm();
       }
     }
 
@@ -90,13 +82,6 @@ void showAlarmScreen() {
       Serial.println("print wake-up message");
       printWakeUp();
     }
-  }
-}
-
-void playAlarmMp3() {
-  if(mp3TrackCount > gMp3CountInitSound) {
-      myMP3.playFolder(1, random(gMp3CountInitSound + 1, mp3TrackCount + 1));
-      delay(1000);
   }
 }
 
@@ -125,7 +110,7 @@ boolean isExitByTouch() {
   uint16_t x, y;
   boolean touched = tft.getTouch(&x, &y);
   if(touched && touchedRect(x, y, &rAlarmOk)) {
-    Serial.print("ok touched");
+    Serial.println("ok touched - exiting alarm screen");
     return true;
   }
   return false;

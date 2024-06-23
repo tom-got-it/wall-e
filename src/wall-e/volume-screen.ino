@@ -2,14 +2,8 @@ void setupVolume() {
   setupVolumeImpl();
   drawWaitingScreen();
 
-  if(myMP3.isPlaying()) {
-    delay(1000);
-    myMP3.stop();
-  }
-
-  delay(1000);
-  myMP3.volume(notificationVolume);
-  delay(1000);
+  stopMp3Playback();
+  setMp3Volume(notificationVolume);
 }
 
 void setupVolumeImpl() {
@@ -51,7 +45,7 @@ void setupVolumeImpl() {
 
       if(touchedRect(x, y, &rTop)) {
         notificationVolume = notificationVolume + 1;
-        if (notificationVolume > 30) { notificationVolume = 30; }
+        if (notificationVolume > getMp3MaxPossibleVolume()) { notificationVolume = getMp3MaxPossibleVolume(); }
         reprint = true;
       }
 
@@ -66,7 +60,7 @@ void setupVolumeImpl() {
       }
 
       if(touchedRect(x, y, &rStop)) {
-        stopPlaying();
+        stopMp3Playback();
       }
 
       delay(80);
@@ -79,20 +73,8 @@ void testVolume() {
     return;
   }
 
-  myMP3.volume(notificationVolume);
-  delay(1000);
-
-  if(! myMP3.isPlaying()) {
-    delay(1000);
-    myMP3.playFolder(1, random(1, mp3TrackCount + 1));
-    delay(1000);
-  }
-}
-
-void stopPlaying() {
-  if(myMP3.isPlaying()) {
-    delay(1000);
-    myMP3.stop();
-    delay(1000);
+  setMp3Volume(notificationVolume);
+  if(! isMp3Playing()) {
+    playMp3RandomFile();
   }
 }
