@@ -17,7 +17,7 @@ void showMenuScreen() {
   tft.drawString("Alarm Volume", rMenuScreenVolume.x + 22, rMenuScreenVolume.y + 7, TFT_BIG_FONT);
   printRect(&rMenuScreenVolume, TFT_MAIN_COLOR, false);
 
-  tft.drawString("Notifcations", rMenuScreenNotifications.x + 25, rMenuScreenNotifications.y + 7, TFT_BIG_FONT);
+  tft.drawString("Notifications", rMenuScreenNotifications.x + 23, rMenuScreenNotifications.y + 7, TFT_BIG_FONT);
   printRect(&rMenuScreenNotifications, TFT_MAIN_COLOR, false);
 
   tft.drawString("MP3 Player", rMenuScreenMp3Player.x + 35, rMenuScreenMp3Player.y + 7, TFT_BIG_FONT);
