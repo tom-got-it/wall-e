@@ -19,7 +19,7 @@
 //---------------------------------------------------------------
 
 //================= GLOBAL DEFINITIONS ==========================
-#define FIRMWARE_VERSION "2024.06.5"          //Put the firmware version here - just for info
+#define FIRMWARE_VERSION "2024.06.6"          //Put the firmware version here - just for info
 #define CALIBRATION_FILE "/calibrationData11" //Internal filename for the calibrated display data - no need to modify this
 #define REPEAT_CAL false                      //Repeat display calibration
 #define INIT_CLOCK false                      //Usually this not required, because the clock will detect when it lost power
