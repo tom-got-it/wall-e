@@ -126,14 +126,14 @@ void printAlarmToggle() {
     int yPos = yToggleAlarm;
 
     if(printedAlarm && 
-        alarmPrintedActive == isAlarmActive && 
-        lastAlarmPrinted.unixtime() == rtc.getAlarm1().unixtime()) {
+        alarmPrintedActive == alarmClockListening && 
+        lastAlarmPrinted.unixtime() == getAlarmClock().unixtime()) {
         //nothing to print
         return;
     }
 
     //Print wheter the alarm is on or off
-    if(isAlarmActive) {
+    if(alarmClockListening) {
       xPos += tft.drawString("<<ON>> ", xPos, yPos, TFT_SMALL_FONT);
     } else {
       xPos += tft.drawString("<<", xPos, yPos, TFT_SMALL_FONT);
@@ -147,13 +147,13 @@ void printAlarmToggle() {
     xPos += tft.drawString("   ", xPos, yPos, TFT_SMALL_FONT);
 
     //Print the alarm-time
-    DateTime alarm = rtc.getAlarm1();
+    DateTime alarm = getAlarmClock();
     xPos = drawTwoDigitsAndGetXPos(alarm.hour(), xPos, yPos, TFT_SMALL_FONT);
     xPos += tft.drawChar(':', xPos, yPos, TFT_SMALL_FONT);
     xPos = drawTwoDigitsAndGetXPos(alarm.minute(), xPos, yPos, TFT_SMALL_FONT);
 
     lastAlarmPrinted = alarm;
-    alarmPrintedActive = isAlarmActive;
+    alarmPrintedActive = alarmClockListening;
     printedAlarm = true;
 }
 
@@ -292,16 +292,6 @@ void printMenu() {
   }
 }
 
-//----------Alarm fired on main screen-------
-void handleMainAlarm() {
-    if(testAndShowAlarmScreen()) {
-      rePrintMainScreen();
-      lastToched = rtc.now();
-      delay(200);
-    }
-}
-
-
 //-----------Touch------------------
 void handleMainTouch() {
     uint16_t x,y = 0;
@@ -319,7 +309,7 @@ void handleMainTouch() {
 
     if(checkTouch(x, y, xRangeToggleAlarm, yRangeToggleAlarm)) {
       Serial.println("touched alarm toggle");
-      toggleAlarm();
+      toggleAlarmClockListening();
       rePrintMainScreen();
     }
 

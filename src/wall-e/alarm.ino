@@ -1,16 +1,41 @@
-boolean hasAlarmFired() {
-  return rtc.alarmFired(1) && isAlarmActive;
+boolean isAlarmClockTriggered() {
+  if(rtc.alarmFired(1) && alarmClockListening) {
+    return true;
+  }
+
+  if(rtc.alarmFired(1)) {
+    Serial.println("Alarm 1 has fired and been ignored - false positive");
+  }
+
+  //We clear the alarm flag on false-positive alarmevents
+  rtc.clearAlarm(1);
+  return false;
 }
 
-void toggleAlarm() {
-  DateTime alarm = rtc.getAlarm1();
+void clearAlarmClockFlag() {
+  rtc.clearAlarm(1);
+}
 
-  if(isAlarmActive) {
-    rtc.disableAlarm(1);
-  } else {
-    rtc.setAlarm1(alarm, DS3231_A1_Hour);
+void setAlarmClock(DateTime dt, boolean startListening) {
+  rtc.setAlarm1(dt, DS3231_A1_Hour);
+  if(startListening) {
+    alarmClockListening = true;
   }
-  isAlarmActive = !isAlarmActive;
+}
+
+void toggleAlarmClockListening() {
+  DateTime alarm = rtc.getAlarm1();
+  if(alarmClockListening) {
+    rtc.disableAlarm(1);
+    alarmClockListening = false;
+  } else {
+    setAlarmClock(alarm, false);
+    alarmClockListening = true;
+  }
+}
+
+DateTime getAlarmClock() {
+  return rtc.getAlarm1();
 }
 
 void handleTimezoneAlarm() {

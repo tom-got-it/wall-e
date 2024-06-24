@@ -22,7 +22,7 @@
 #define FIRMWARE_VERSION "2024.06.5"          //Put the firmware version here - just for info
 #define CALIBRATION_FILE "/calibrationData11" //Internal filename for the calibrated display data - no need to modify this
 #define REPEAT_CAL false                      //Repeat display calibration
-#define INIT_CLOCK false                      //Only required when clock-battery is changed or the clock was reset before
+#define INIT_CLOCK false                      //Usually this not required, because the clock will detect when it lost power
 #define WIFI_SSID ""                          //Required optionally for over-the-air updates
 #define WIFI_PWD ""                           //Required optionally for over-the-air updates
 //===============================================================
@@ -80,7 +80,7 @@ const uint64_t WAKEUP_BITMASK_RTC = 0x8000000; // PIN27
 RTC_DATA_ATTR DateTime firstBootTime;
 RTC_DATA_ATTR DateTime lastTimezoneChange;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR boolean isAlarmActive = true;
+RTC_DATA_ATTR boolean alarmClockListening = true;
 RTC_DATA_ATTR int notificationVolume = gDefaultNotificationVolume;
 RTC_DATA_ATTR int mp3TrackCount = 0;
 RTC_DATA_ATTR int showBatteryStatistics = 0;  //1=show voltage, 2=show current

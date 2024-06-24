@@ -9,25 +9,13 @@ const int alarmRefreshMessageSeconds = 5;
 DateTime alarmStart;
 DateTime alarmLastWakeupPrint;
 
-boolean testAndShowAlarmScreen() {
-  if(rtc.alarmFired(1)) {
-      rtc.clearAlarm(1);
-
-      if(isAlarmActive) {
-        //There seems to be a bug within the rtc.
-        //When alarm is disabled and the system wakes up, alarmFired is true when the alarm occurred in sleep mode.
-        missedAlarmNotification = false;
-        showAlarmScreen();
-        return true;
-      }
-  }
-  return false;
-}
-
 void showAlarmScreen() {
   Serial.println("----Entering alarm-Screen - Alarm has fired----");
-  alarmStart = rtc.now();
 
+  clearAlarmClockFlag();
+  missedAlarmNotification = false;
+
+  alarmStart = rtc.now();
   clearScreen();
 
   boolean lightBulbWasActive = false;

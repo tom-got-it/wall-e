@@ -134,7 +134,7 @@ void printCommonItems(byte mode) {
 }
 
 byte executeSetupLoopAlarm() {
-  DateTime dt = rtc.getAlarm1();
+  DateTime dt = getAlarmClock();
   int hour = dt.hour();
   int minute = dt.minute();
 
@@ -190,12 +190,9 @@ byte executeSetupLoopAlarm() {
     }
 
     if(touched && clockChanged) {
-      DateTime alarm = rtc.getAlarm1();
+      DateTime alarm = getAlarmClock();
       DateTime dt = DateTime(alarm.year(), alarm.month(), alarm.day(), hour, minute, 0);
-      rtc.setAlarm1(dt, DS3231_A1_Hour);
-      if(! isAlarmActive) {
-        toggleAlarm();
-      }
+      setAlarmClock(dt, true);
     }
 
     if(touched && touchedRect(x, y, &rSetupOk)) {

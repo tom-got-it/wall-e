@@ -29,7 +29,7 @@ void showMenuScreen() {
   delay(300);
 
   while(true) {
-    if(hasAlarmFired()) {
+    if(isAlarmClockTriggered()) {
       Serial.println("Leaving menu screen because an alarm has fired");
       return;
     }

@@ -185,7 +185,7 @@ void drawMp3PlayerVoltage() {
 void mp3PlayerLoop() {
   while(true) {
     //Alarm test - stop the MP3 player on alarm
-    if(hasAlarmFired()) {
+    if(isAlarmClockTriggered()) {
       return;
     }
 
@@ -391,7 +391,7 @@ void mp3PlayerDisplayAutoOffTest() {
   }
 
   if(mp3LastTouched.unixtime() + gMp3PlayerDisplayAutoShutdownSeconds < rtc.now().unixtime()) {
-      digitalWrite(PIN_LCD_LED, LOW);
+      turnOffDisplay();
       mp3DisplayIsOn = false;
   }
 }
@@ -402,7 +402,7 @@ void mp3PlayerToggleDisplayMode() {
 }
 
 void mp3PlayerTurnOnDisplay() {
-  digitalWrite(PIN_LCD_LED, HIGH);
+  turnOnDisplay();
   mp3DisplayIsOn = true;
 }
 

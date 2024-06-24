@@ -11,7 +11,7 @@ void doSetup() {
     String fwr = "Firmware Version: " + version;
     Serial.println(fwr);
 
-    printWaekeupReason();
+    printWakeupReason();
 
     setupRTC();
     setupBatterySensor();
@@ -19,26 +19,35 @@ void doSetup() {
     setupFilesystem();
     setupTFT();
     setupMp3();
-
-    if(bootCount == 1) {
-      setupFirstBoot();
-    }
-
+    setupIfFirstBoot();
     prepareWebServer();
+
+    registerDeepSleepWakeups();
+    checkGoBackToDeepSleep();
+
+    //Turn on the display, calibrate, print warnings and boot animations
+    turnOnDisplay();
+    setupCalibrateTFT();
+    setupDrawMp3Warning();
+    if(bootCount == 1) {
+      playBootSound();
+      drawWalleGifMain();
+      delay(1000);
+    }
 
     //On boot, set the last time touched as now
     lastToched = rtc.now();
     drawEmptyMainScreen();
-    registerDeepSleepWakeups();
+
     Serial.println("Ending setup...");
 }
 
 void setupTFT() {
   Serial.println("----------Setup TFT--------------");
 
-  //Backlight
+  //Backlight - by default off during the setup - we don't want to disturb the user
   pinMode(PIN_LCD_LED, OUTPUT);
-  digitalWrite(PIN_LCD_LED, HIGH);
+  turnOffDisplay();
 
   //TFT IRQ used in order to wake-up
   pinMode(PIN_TFT_IRQ, INPUT_PULLUP);
@@ -48,18 +57,8 @@ void setupTFT() {
   tft.setRotation(1);
   tft.setSwapBytes(true);
 
-  //Calibrate if necessary
-  calibrateTFT();
-
   //Fill the screen with black
   tft.fillScreen(TFT_BLACK);
-}
-
-void drawEmptyMainScreen() {
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextSize(1);
-  tft.drawBitmap(0, 0, epd_bitmap_Interface_2, 320, 240, TFT_MAIN_COLOR);
-  tft.setTextColor(0xFDE0, TFT_BLACK);
 }
 
 void setupFilesystem() {
@@ -70,7 +69,7 @@ void setupFilesystem() {
   }
 }
 
-void calibrateTFT() {
+void setupCalibrateTFT() {
   uint16_t calData[5];
   uint8_t calDataOK = 0;
 
@@ -125,6 +124,7 @@ void calibrateTFT() {
     }
     Serial.println("TFT Calibration finished");
   }
+  tft.fillScreen(TFT_BLACK);
 }
 
 void setupRTC() {
@@ -165,27 +165,29 @@ void setupMp3() {
   FPSerial.begin(9600, SERIAL_8N1, PIN_MP3_RX, PIN_MP3_TX);
   myMP3.begin(FPSerial, false, 500);
 
-  //Test the connection (only on first boot)
-  if(bootCount == 1) {
-    mp3TrackCount = getMp3TrackCount();
-    Serial.print("MP3 track count: ");
-    Serial.println(mp3TrackCount);
-    if(bootCount == 1 && mp3TrackCount <= 0) {
-      Serial.println(F("Unable to begin:"));
-      Serial.println(F("1.Please recheck the connection!"));
-      Serial.println(F("2.Please insert the SD card!"));
+  mp3TrackCount = getMp3TrackCount();
+  Serial.print("MP3 track count: ");
+  Serial.println(mp3TrackCount);
 
-      tft.fillScreen(TFT_BLACK);
-      tft.drawString("No MP3s found - playback will be disabled.", 20, 112, 2);
-      delay(8000);
-      drawEmptyMainScreen();
-    }
+  if(bootCount == 1) {
     setMp3Volume(notificationVolume);
-    playMp3RandomBootSound();
   }
 
   //No option to wakeup :/
   //myMP3.standbyMode();
+}
+
+void playBootSound() {
+  playMp3RandomBootSound();
+}
+
+void setupDrawMp3Warning() {
+  if(mp3TrackCount <= 0) {
+      tft.fillScreen(TFT_BLACK);
+      tft.drawString("No MP3s found - playback will be disabled.", 20, 112, 2);
+      delay(8000);
+      tft.fillScreen(TFT_BLACK);
+  }
 }
 
 void setupLightBulb() {
@@ -219,13 +221,13 @@ void setupBatterySensor() {
   Serial.println(" mA");
 }
 
-void setupFirstBoot() {
-  Serial.println("--------Setup first boot----------");
-
-  drawWalleGifMain();
-  delay(1000);
-  firstBootTime = rtc.now();
-  lastTimezoneChange = rtc.now();
+void setupIfFirstBoot() {
+  if(bootCount == 1) {
+    Serial.println("--------Setup first boot----------");
+    delay(500); //hopefully fixes a bug where rct.now() was 1.1.2000 sometimes
+    firstBootTime = rtc.now();
+    lastTimezoneChange = rtc.now();
+  }
 }
 
 void prepareWebServer() {
@@ -237,20 +239,45 @@ void prepareWebServer() {
   ElegantOTA.setAutoReboot(false);
 }
 
-void printWaekeupReason()
+void printWakeupReason()
 {
-  esp_sleep_wakeup_cause_t wakeup_reason;
-  wakeup_reason = esp_sleep_get_wakeup_cause();
+  esp_sleep_wakeup_cause_t wakeupReason;
+  wakeupReason = esp_sleep_get_wakeup_cause();
 
-  switch (wakeup_reason)
+  switch (wakeupReason)
   {
     case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by TFT IRQ (touch event)"); break;
     case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by RTC IRQ (alarm)"); break;
     case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
     case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
     case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
-    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeupReason); break;
   }
+}
+
+void checkGoBackToDeepSleep() {
+  esp_sleep_wakeup_cause_t wakeupReason;
+  wakeupReason = esp_sleep_get_wakeup_cause();
+
+  if(wakeupReason != ESP_SLEEP_WAKEUP_EXT1) {
+    //continue booting
+    return;
+  }
+
+  //handle a possible time zone alarm
+  handleTimezoneAlarm();
+
+  //Wake-up triggered by RTC
+  if(isAlarmClockTriggered()) {
+    //continue booting
+    return;
+  }
+
+  //go back to deep-sleep
+  Serial.println("Going back to deep sleep - woke up by RTC and nothing more to do");
+  Serial.flush();
+  esp_deep_sleep_start();
+  Serial.println("This will never be printed");
 }
 
 void registerDeepSleepWakeups() {

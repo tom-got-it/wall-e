@@ -40,7 +40,7 @@ boolean testLightBulbStillActive() {
 }
 
 void disableLightBulb() {
-  Serial.println("Disabling light bulb now (force).");
+  Serial.println("Disabling light bulb now if it was active (forcing it).");
   digitalWrite(PIN_LIGHT_BULB, LOW);
   lightBulbIsActive = false;
   delay(500);

@@ -9,12 +9,13 @@ void loop() {
 
     if(isFirmwareUpdateInProgress) {
       showFirmwareUpdateScreen();
-
-      //Prohibit to enter sleep-mode directly after exiting the update-screen.
+      lastToched = rtc.now();
+    } else if(isAlarmClockTriggered()) {
+      showAlarmScreen();
+      rePrintMainScreen();
       lastToched = rtc.now();
     } else {
       printMainScreen();
-      handleMainAlarm();
       handleMainTouch();
     }
 

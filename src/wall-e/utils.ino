@@ -24,6 +24,21 @@ void drawNoWiFiWarningScreen() {
   tft.setTextColor(TFT_MAIN_COLOR);
 }
 
+void drawEmptyMainScreen() {
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextSize(1);
+  tft.drawBitmap(0, 0, epd_bitmap_Interface_2, 320, 240, TFT_MAIN_COLOR);
+  tft.setTextColor(TFT_MAIN_COLOR, TFT_BLACK);
+}
+
+void turnOnDisplay() {
+  digitalWrite(PIN_LCD_LED, HIGH);
+}
+
+void turnOffDisplay() {
+  digitalWrite(PIN_LCD_LED, LOW);
+}
+
 boolean checkTouch(uint16_t x, uint16_t y, const int xRange[], const int yRange[]) {
     if(x > xRange[0] && x < xRange[1]) {
       if(y > yRange[0] && y < yRange[1]) {
