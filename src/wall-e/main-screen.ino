@@ -126,14 +126,14 @@ void printAlarmToggle() {
     int yPos = yToggleAlarm;
 
     if(printedAlarm && 
-        alarmPrintedActive == alarmClockListening && 
+        alarmPrintedActive == isAlarmClockEnabled() && 
         lastAlarmPrinted.unixtime() == getAlarmClock().unixtime()) {
         //nothing to print
         return;
     }
 
     //Print wheter the alarm is on or off
-    if(alarmClockListening) {
+    if(isAlarmClockEnabled()) {
       xPos += tft.drawString("<<ON>> ", xPos, yPos, TFT_SMALL_FONT);
     } else {
       xPos += tft.drawString("<<", xPos, yPos, TFT_SMALL_FONT);
@@ -153,7 +153,7 @@ void printAlarmToggle() {
     xPos = drawTwoDigitsAndGetXPos(alarm.minute(), xPos, yPos, TFT_SMALL_FONT);
 
     lastAlarmPrinted = alarm;
-    alarmPrintedActive = alarmClockListening;
+    alarmPrintedActive = isAlarmClockEnabled();
     printedAlarm = true;
 }
 
@@ -309,7 +309,7 @@ void handleMainTouch() {
 
     if(checkTouch(x, y, xRangeToggleAlarm, yRangeToggleAlarm)) {
       Serial.println("touched alarm toggle");
-      toggleAlarmClockListening();
+      toggleAlarmClockEnabled();
       rePrintMainScreen();
     }
 

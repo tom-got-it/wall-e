@@ -286,8 +286,11 @@ From the Arduino IDE, install the following libraries (the libraries might need 
     * You might need to download it manually and place it within the library folder of the Arduino IDE
 * ElegantOTA by Ayush Sharama
     * <https://github.com/ayushsharma82/ElegantOTA>
-* RTCLib by Adafruit
-    * <https://github.com/adafruit/RTClib>
+* BusIO by Adafruit
+    * <https://github.com/adafruit/Adafruit_BusIO>
+* Tom_RTCLib by Tom-got-it (this is my fork of the Adafruit RTCLib as I needed to add additional features)
+    * <https://github.com/tom-got-it/Tom_RTClib/>
+    * You might need to download it manually and place it within the library folder of the Arduino IDE
 * TFT_eSPI by Bodmer
     * <https://github.com/Bodmer/TFT_eSPI>
 

@@ -1,10 +1,14 @@
+boolean isAlarmClockEnabled() {
+  return rtc.isAlarm1InterruptEnabled();
+}
+
 boolean isAlarmClockTriggered() {
-  if(rtc.alarmFired(1) && alarmClockListening) {
+  if(rtc.alarmFired(1) && isAlarmClockEnabled()) {
     return true;
   }
 
   if(rtc.alarmFired(1)) {
-    Serial.println("Alarm 1 has fired and been ignored - false positive");
+    Serial.println("Alarm 1 flag is active but alarm (interrupt) was disabled - false positive");
   }
 
   //We clear the alarm flag on false-positive alarmevents
@@ -16,21 +20,16 @@ void clearAlarmClockFlag() {
   rtc.clearAlarm(1);
 }
 
-void setAlarmClock(DateTime dt, boolean startListening) {
+void setAlarmClock(DateTime dt) {
   rtc.setAlarm1(dt, DS3231_A1_Hour);
-  if(startListening) {
-    alarmClockListening = true;
-  }
 }
 
-void toggleAlarmClockListening() {
+void toggleAlarmClockEnabled() {
   DateTime alarm = rtc.getAlarm1();
-  if(alarmClockListening) {
+  if(isAlarmClockEnabled()) {
     rtc.disableAlarm(1);
-    alarmClockListening = false;
   } else {
-    setAlarmClock(alarm, false);
-    alarmClockListening = true;
+    setAlarmClock(alarm);
   }
 }
 

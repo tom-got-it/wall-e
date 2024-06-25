@@ -1,6 +1,6 @@
 #include "hal/gpio_types.h"
 #include "FS.h"
-#include "RTClib.h"
+#include <Tom_RTClib.h>
 #include "TFT_eSPI.h"
 #include "driver/rtc_io.h"
 #include <DFPlayerMini_Fast.h>
@@ -80,7 +80,6 @@ const uint64_t WAKEUP_BITMASK_RTC = 0x8000000; // PIN27
 RTC_DATA_ATTR DateTime firstBootTime;
 RTC_DATA_ATTR DateTime lastTimezoneChange;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR boolean alarmClockListening = true;
 RTC_DATA_ATTR int notificationVolume = gDefaultNotificationVolume;
 RTC_DATA_ATTR int mp3TrackCount = 0;
 RTC_DATA_ATTR int showBatteryStatistics = 0;  //1=show voltage, 2=show current

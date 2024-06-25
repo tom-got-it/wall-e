@@ -192,7 +192,7 @@ byte executeSetupLoopAlarm() {
     if(touched && clockChanged) {
       DateTime alarm = getAlarmClock();
       DateTime dt = DateTime(alarm.year(), alarm.month(), alarm.day(), hour, minute, 0);
-      setAlarmClock(dt, true);
+      setAlarmClock(dt);
     }
 
     if(touched && touchedRect(x, y, &rSetupOk)) {

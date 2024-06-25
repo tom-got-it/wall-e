@@ -155,6 +155,12 @@ void setupRTC() {
     //keep the lost power flag in memory until the user opens the notifications
     rtcLostPowerNotification = rtcLostPowerNotification || lostPower;
   }
+
+  if(isAlarmClockEnabled()) {
+    Serial.println("Note: Alarm (clock) is active and waiting");
+  } else {
+    Serial.println("Note: Alarm (clock) is disabled");
+  }
 }
 
 void setupMp3() {
