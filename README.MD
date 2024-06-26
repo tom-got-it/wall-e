@@ -55,6 +55,7 @@ Here is a small list of features:
 * Alarm clock
   * can be turned on and off
   * is stored in memory of the RTC clock and still available after power loss (as long as the RTC is powered by a CR2032 battery)
+  * several adjustable modes: alarm each day, alarm at weekdays only, alarm at weekend only
 * Alarm auto-shutdown when the user did not react within a certain time
 * Notification center
   * Shows missed alarms
@@ -420,7 +421,7 @@ After testing everything, test if battery operation works, as well. Especially t
 
 ## Over the Air Udates
 The system supports over-the-air (OTA) updates by WiFi. As explained above, you must configure your SSID and WiFi password.
-To put the robot into OTA-mode, go to the main menu (the Plus-Button on the main-screen) and then select "Firmware". Then, the firmware update screen is shown. The ESP32 will try to start WiFi and also print the URL for updates. Open that URL in a browser and upload a new firmware file. To create a firmware file, click in the Arduino IDE at "sketch->Export compiled Binary". The "bin"-file with the name of your project is the firmware-file.
+To put the robot into OTA-mode, go to the main menu (touch the voltage bars or the USB/Charge symbol) and then select "Firmware". Then, the firmware update screen is shown. The ESP32 will try to start WiFi and also print the URL for updates. Open that URL in a browser and upload a new firmware file. To create a firmware file, click in the Arduino IDE at "sketch->Export compiled Binary". The "bin"-file with the name of your project is the firmware-file.
 
 <img src="./images/firmware-updates.jpg" alt="robot-image" width="400"/>
 
