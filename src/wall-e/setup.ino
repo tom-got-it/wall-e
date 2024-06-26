@@ -19,8 +19,9 @@ void doSetup() {
     setupFilesystem();
     setupTFT();
     setupMp3();
-    setupIfFirstBoot();
     prepareWebServer();
+
+    firstBootTime = rtc.now();
 
     registerDeepSleepWakeups();
     checkGoBackToDeepSleep();
@@ -133,27 +134,32 @@ void setupRTC() {
   pinMode(PIN_RTC_IRQ, INPUT_PULLUP);
 
   rtc.begin();
-  rtc.disable32K();                   //we don't need the 32K Pin, so disable it
-  rtc.writeSqwPinMode(DS3231_OFF);    // stop oscillating signals at SQW Pin, otherwise setAlarm1 will fail
-
   boolean lostPower = rtc.lostPower();
 
   if(INIT_CLOCK || lostPower) {
     Serial.println("RTC lost power or forced to adjust");
+
+    rtc.writeSqwPinMode(DS3231_OFF);    // stop oscillating signals at SQW Pin, otherwise setAlarm1 will fail
+    rtc.disable32K();                   //we don't need the 32K Pin, so disable it
+
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     Serial.print("New Time: ");
     serialPrintTime(rtc.now());
 
     rtc.clearAlarm(1);                // set alarm 1, 2 flag to false (so alarm 1, 2 didn't happen so far)
-    rtc.clearAlarm(2);
     rtc.disableAlarm(1);
-    rtc.disableAlarm(2);
 
     lastTimezoneChange = rtc.now();
     setupNextTimezoneAlarm();
 
     //keep the lost power flag in memory until the user opens the notifications
     rtcLostPowerNotification = rtcLostPowerNotification || lostPower;
+  } else if(bootCount == 1) {
+    Serial.println("Setup RTC on first boot - clear alarms - setup timezone handling");
+    clearAlarmClockFlag();
+
+    lastTimezoneChange = rtc.now();
+    setupNextTimezoneAlarm();
   }
 
   if(isAlarmClockEnabled()) {
@@ -161,6 +167,7 @@ void setupRTC() {
   } else {
     Serial.println("Note: Alarm (clock) is disabled");
   }
+  Serial.println("Alarm (clock) mode is: " + parseAlarmClockModeString(getAlarmClockMode()));
 }
 
 void setupMp3() {
@@ -225,15 +232,6 @@ void setupBatterySensor() {
   Serial.print("Battery output current: ");
   Serial.print(getBatCurrentMillis());
   Serial.println(" mA");
-}
-
-void setupIfFirstBoot() {
-  if(bootCount == 1) {
-    Serial.println("--------Setup first boot----------");
-    delay(500); //hopefully fixes a bug where rct.now() was 1.1.2000 sometimes
-    firstBootTime = rtc.now();
-    lastTimezoneChange = rtc.now();
-  }
 }
 
 void prepareWebServer() {

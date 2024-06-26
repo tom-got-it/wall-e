@@ -18,9 +18,10 @@ const int setupDateY = 100;
 
 const byte SETUP_MODE_EXIT_OK = 0;
 const byte SETUP_MODE_ALARM = 1;
-const byte SETUP_MODE_LIGHT = 2;
-const byte SETUP_MODE_CLOCK = 3;
-const byte SETUP_MODE_DATE = 4;
+const byte SETUP_MODE_ALARM_MODE = 2;
+const byte SETUP_MODE_LIGHT = 3;
+const byte SETUP_MODE_CLOCK = 4;
+const byte SETUP_MODE_DATE = 5;
 
 void showSetupScreen() {
   Serial.println("----Entering clock setup screen----");
@@ -28,6 +29,12 @@ void showSetupScreen() {
   while(true) {
     if(mode == SETUP_MODE_ALARM) {
       mode = doAlarmSetup();
+      delay(150);
+      continue;
+    }
+
+    if(mode == SETUP_MODE_ALARM_MODE) {
+      mode = doAlarmModeSetup();
       delay(150);
       continue;
     }
@@ -64,6 +71,15 @@ byte doAlarmSetup() {
   tft.drawString("Alarm", 112, 10, TFT_BIG_FONT);
 
   return executeSetupLoopAlarm();
+}
+
+byte doAlarmModeSetup() {
+  Serial.println("Setup alarm mode");
+
+  printCommonItems(SETUP_MODE_ALARM_MODE);
+  tft.drawString("Alarm-Mode", 90, 10, TFT_BIG_FONT);
+
+  return executeSetupLoopAlarmMode();
 }
 
 byte doLightSetup() {
@@ -108,6 +124,7 @@ void printCommonItems(byte mode) {
       printTriangleLeftRight(&rSetupRight, TFT_MAIN_COLOR);
       break;
     case SETUP_MODE_LIGHT:
+    case SETUP_MODE_ALARM_MODE:
       printTriangleUpDown(&setupTop2, TFT_MAIN_COLOR);
       printTriangleUpDown(&setupBottom2, TFT_MAIN_COLOR);
       printTriangleLeftRight(&rSetupLeft, TFT_MAIN_COLOR);
@@ -189,17 +206,83 @@ byte executeSetupLoopAlarm() {
       reprint = true;
     }
 
-    if(touched && clockChanged) {
-      DateTime alarm = getAlarmClock();
-      DateTime dt = DateTime(alarm.year(), alarm.month(), alarm.day(), hour, minute, 0);
-      setAlarmClock(dt);
-    }
-
     if(touched && touchedRect(x, y, &rSetupOk)) {
+      if(clockChanged) {
+        DateTime alarm = getAlarmClock();
+        DateTime dt = DateTime(alarm.year(), alarm.month(), alarm.day(), hour, minute, 0);
+        setAlarmClock(dt);
+      }
       return SETUP_MODE_EXIT_OK;
     }
 
     if(touchedRect(x, y, &rSetupRight)) {
+      if(clockChanged) {
+        DateTime alarm = getAlarmClock();
+        DateTime dt = DateTime(alarm.year(), alarm.month(), alarm.day(), hour, minute, 0);
+        setAlarmClock(dt);
+      }
+      return SETUP_MODE_ALARM_MODE;
+    }
+
+    if(touched) {
+      delay(80);
+    }
+  }
+}
+
+byte executeSetupLoopAlarmMode() {
+  boolean reprint = true;
+  int mode = getAlarmClockMode();
+  boolean changed = false;
+
+  while(true) {
+    if(reprint) {
+      printRect(&rSetupReset, TFT_BLACK, true);
+      tft.drawString(parseAlarmClockModeString(mode), 95, 115, TFT_BIG_FONT);
+      reprint = false;
+    }
+
+    uint16_t x,y;
+    boolean touched = tft.getTouch(&x, &y);
+
+    if(touched && touchedRect(x, y, &setupTop2)) {
+      mode = mode + 1;
+      if(mode > getAlarmClockModeMaxValue()) {
+        mode = getAlarmClockModeMinValue();
+      }
+      reprint = true;
+      changed = true;
+    }
+
+    if(touched && touchedRect(x, y, &setupBottom2)) {
+      mode = mode -1;
+      if(mode < getAlarmClockModeMinValue()) {
+        mode = getAlarmClockModeMaxValue();
+      }
+      reprint = true;
+      changed = true;
+    }
+
+
+    if(touched && touchedRect(x, y, &rSetupOk)) {
+      if(changed) {
+        setAlarmClockModeAndEnable(mode);
+      }
+      return SETUP_MODE_EXIT_OK;
+    }
+
+
+    if(touched && touchedRect(x, y, &rSetupLeft)) {
+      if(changed) {
+        setAlarmClockModeAndEnable(mode);
+      }
+      return SETUP_MODE_ALARM;
+    }
+
+    if(touched && touchedRect(x, y, &rSetupRight)) {
+      if(changed) {
+        setAlarmClockModeAndEnable(mode);
+      }
       return SETUP_MODE_LIGHT;
     }
 
@@ -254,7 +337,7 @@ byte executeSetupLoopLight() {
 
 
     if(touched && touchedRect(x, y, &rSetupLeft)) {
-      return SETUP_MODE_ALARM;
+      return SETUP_MODE_ALARM_MODE;
     }
 
     if(touched && touchedRect(x, y, &rSetupRight)) {

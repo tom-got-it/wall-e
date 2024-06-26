@@ -11,6 +11,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ElegantOTA.h>
 #include "timezone.h"
+#include "types.h"
 #include "./img/bitmap.h"
 #include "./gif/walle-gif-main.h"
 
@@ -19,7 +20,7 @@
 //---------------------------------------------------------------
 
 //================= GLOBAL DEFINITIONS ==========================
-#define FIRMWARE_VERSION "2024.06.6"          //Put the firmware version here - just for info
+#define FIRMWARE_VERSION "2024.06.8"          //Put the firmware version here - just for info
 #define CALIBRATION_FILE "/calibrationData11" //Internal filename for the calibrated display data - no need to modify this
 #define REPEAT_CAL false                      //Repeat display calibration
 #define INIT_CLOCK false                      //Usually this not required, because the clock will detect when it lost power
@@ -89,15 +90,6 @@ RTC_DATA_ATTR boolean rtcLostPowerNotification = false;
 RTC_DATA_ATTR boolean missedAlarmNotification = false;
 //===============================================================
 
-
-//========================== TYPES ===============================
-typedef struct {
-  int x;
-  int y;
-  int width;
-  int height;
-} rect;
-//===============================================================
 
 
 //================ OTHERS =======================================

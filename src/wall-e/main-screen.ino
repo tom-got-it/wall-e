@@ -3,13 +3,13 @@ const int yClock = 150;
 const int xRangeSetupAlarm[] = {20, 165};
 const int yRangeSetupAlarm[] = {150, 210};
 
-const int xToggleAlarm = 20;
+const int xToggleAlarm = 15;
 const int yToggleAlarm = 210;
-const int xRangeToggleAlarm[] = {20, 165};
+const int xRangeToggleAlarm[] = {15, 189};
 const int yRangeToggleAlarm[] = {210, 240};
 
-const int xRangeChangeVolume[] = {190, 320};
-const int yRangeChangeVolume[] = {30, 200};
+const int xRangeMainMenu[] = {190, 320};
+const int yRangeMainMenu[] = {30, 200};
 
 const int xPosVoltage = 220;
 const int xPosCurrentMilliAmps = 210;
@@ -27,10 +27,6 @@ const rect rResetNotificationCenter = {0, 0, 50, 50};
 
 const int xRangeLightBulb[] = {100, 170};
 const int yRangeLightBulb[] = {50, 120};
-
-const int xPosMenuCenter = 30;
-const int yPosMenuCenter = 77;
-const rect rMenuTouch = {0, 57, 50, 40};
 
 const rect rMp3Player = {15, 60, 25, 30};
 
@@ -54,8 +50,6 @@ int lastPrintedVoltageBarCount = -3; //-1 = on USB, -2 = charging battery
 
 boolean printedNotification = false;
 boolean wasUrgentNotificationBefore = false;
-
-boolean printedMenu = false;
 //-------------------------------------------
 
 
@@ -64,7 +58,6 @@ void rePrintMainScreen() {
   printedAlarm = false;
   printedBatteryData = false;
   printedNotification = false;
-  printedMenu = false;
 
   clearScreen();
   tft.drawBitmap(0, 0, epd_bitmap_Interface_2, 320, 240, TFT_MAIN_COLOR);
@@ -77,7 +70,6 @@ void printMainScreen() {
   printAlarmToggle();
   printBatteryData();
   printNotification();
-  printMenu();
 }
 
 void printClock() {
@@ -144,13 +136,20 @@ void printAlarmToggle() {
     }
 
     //Blanks
-    xPos += tft.drawString("   ", xPos, yPos, TFT_SMALL_FONT);
+    xPos += tft.drawString(" ", xPos, yPos, TFT_SMALL_FONT);
 
     //Print the alarm-time
     DateTime alarm = getAlarmClock();
     xPos = drawTwoDigitsAndGetXPos(alarm.hour(), xPos, yPos, TFT_SMALL_FONT);
     xPos += tft.drawChar(':', xPos, yPos, TFT_SMALL_FONT);
     xPos = drawTwoDigitsAndGetXPos(alarm.minute(), xPos, yPos, TFT_SMALL_FONT);
+
+    int mode = getAlarmClockMode();
+    if(mode != ALARM_CLOCK_EACH_DAY) {
+      xPos += tft.drawString(" (", xPos, yPos, TFT_SMALL_FONT);
+      xPos += tft.drawString(parseAlarmClockModeString(mode), xPos, yPos, TFT_SMALL_FONT);
+      xPos += tft.drawString(")", xPos, yPos, TFT_SMALL_FONT);
+    }
 
     lastAlarmPrinted = alarm;
     alarmPrintedActive = isAlarmClockEnabled();
@@ -284,14 +283,6 @@ void printNotification() {
   }
 }
 
-void printMenu() {
-  if(! printedMenu) {
-    fillArc(xPosMenuCenter, yPosMenuCenter, 0, 60, 15, 15, 1, TFT_MAIN_COLOR);
-    tft.drawString("+", xPosMenuCenter - 5, yPosMenuCenter - 12, TFT_BIG_FONT);
-    printedMenu = true;
-  }
-}
-
 //-----------Touch------------------
 void handleMainTouch() {
     uint16_t x,y = 0;
@@ -313,10 +304,13 @@ void handleMainTouch() {
       rePrintMainScreen();
     }
 
-    if(checkTouch(x, y, xRangeChangeVolume, yRangeChangeVolume)) {
-      Serial.println("touched volume change");
-      setupVolume();
-      rePrintMainScreen();
+    if(checkTouch(x, y, xRangeMainMenu, yRangeMainMenu)) {
+      Serial.println("touched main menu");
+      showMenuScreen();
+
+      if(! isFirmwareUpdateInProgress) {
+        rePrintMainScreen();
+      }
     }
 
     if(checkTouch(x, y, xRangeBatteryStatistics, yRangeBatteryStatistics)) {
@@ -337,15 +331,6 @@ void handleMainTouch() {
     if(checkTouch(x, y, xRangeLightBulb, yRangeLightBulb)) {
       Serial.println("touched light bulb toggle");
       handleLightBulb();
-    }
-
-    if(touchedRect(x, y, &rMenuTouch)) {
-      Serial.println("touched menu icon");
-      showMenuScreen();
-
-      if(! isFirmwareUpdateInProgress) {
-        rePrintMainScreen();
-      }
     }
 
     lastToched = rtc.now();

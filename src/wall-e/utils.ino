@@ -167,6 +167,12 @@ String getFormattedTime(DateTime dt, boolean printWeekday) {
     return result;
 }
 
+String getFormattedTimeWithoutDate(DateTime dt) {
+    String result = "";
+    result = result + padByZeroTwoDigits(dt.hour()) + ":" + padByZeroTwoDigits(dt.minute()) + ":" + padByZeroTwoDigits(dt.second());
+    return result;
+}
+
 void serialPrintTime(DateTime dt) {
     Serial.println(getFormattedTime(dt, true));
 }

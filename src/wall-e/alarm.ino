@@ -1,27 +1,110 @@
+int getAlarmClockMode() {
+  int mode = getAlarmClock().day();
+  if(mode > getAlarmClockModeMaxValue() || mode < getAlarmClockModeMinValue()) {
+    return ALARM_CLOCK_EACH_DAY;
+  }
+  return mode;
+}
+
+int getAlarmClockModeMinValue() {
+  return 1;
+}
+
+int getAlarmClockModeMaxValue() {
+  return ALARM_CLOCK_MODES_LENGTH;
+}
+
+String parseAlarmClockModeString(int mode) {
+  switch (mode) {
+    case ALARM_CLOCK_EACH_DAY: return "each day";
+    case ALARM_CLOCK_WEEKDAYS: return "weekdays";
+    case ALARM_CLOCK_WEEKEND: return "weekend";
+    default: return "each day";
+  }
+}
+
+boolean isAlarmClockModeMatchingNow() {
+  DateTime now = rtc.now();
+  int mode = getAlarmClockMode();
+  switch (mode) {
+    case ALARM_CLOCK_EACH_DAY:
+      //alarm rings each day
+      return true;
+    case ALARM_CLOCK_WEEKDAYS:
+      return now.dayOfTheWeek() >= 1 && now.dayOfTheWeek() <= 5;
+    case ALARM_CLOCK_WEEKEND:
+      return now.dayOfTheWeek() == 6 || now.dayOfTheWeek() == 0;
+    default:
+      //alarm rings each day
+      return true;
+  }
+}
+
+void setAlarmClockModeAndEnable(int mode) {
+  //note that we use the year to store the alarm mode
+  DateTime alarm = getAlarmClock();
+  boolean wasActive = isAlarmClockEnabled();
+  if(mode > getAlarmClockModeMaxValue() || mode < getAlarmClockModeMinValue()) {
+    mode = ALARM_CLOCK_EACH_DAY;
+  }
+  DateTime newAlarm = DateTime(alarm.year(), alarm.month(), mode, alarm.hour(), alarm.minute(), alarm.second());
+
+  String stateStr = "enabled";
+  Serial.print("Setup alarm: ");
+  Serial.print(getFormattedTimeWithoutDate(newAlarm));
+  Serial.print(" - mode: ");
+  Serial.print(parseAlarmClockModeString(mode));
+  Serial.print(" - state: ");
+  Serial.println(stateStr);
+
+  rtc.setAlarm1(newAlarm, DS3231_A1_Hour);
+}
+
+void setAlarmClock(DateTime dt) {
+  //note that we use the day to store the alarm mode. Since we do not want to change the mode, we must preserve the year of the current alarm
+  DateTime alarm = getAlarmClock();
+  DateTime newAlarm = DateTime(dt.year(), dt.month(), alarm.day(), dt.hour(), dt.minute(), dt.second());
+
+  String stateStr = "enabled";
+  Serial.print("Setup alarm: ");
+  Serial.print(getFormattedTimeWithoutDate(newAlarm));
+  Serial.print(" - mode: ");
+  Serial.print(parseAlarmClockModeString(newAlarm.day()));
+  Serial.print(" - state: ");
+  Serial.println(stateStr);
+
+  rtc.setAlarm1(newAlarm, DS3231_A1_Hour);
+}
+
 boolean isAlarmClockEnabled() {
   return rtc.isAlarm1InterruptEnabled();
 }
 
 boolean isAlarmClockTriggered() {
-  if(rtc.alarmFired(1) && isAlarmClockEnabled()) {
+  boolean fired = rtc.alarmFired(1);
+  boolean enabled = isAlarmClockEnabled();
+  boolean modeMatchingNow = isAlarmClockModeMatchingNow();
+  if(fired && enabled && modeMatchingNow) {
     return true;
   }
 
-  if(rtc.alarmFired(1)) {
-    Serial.println("Alarm 1 flag is active but alarm (interrupt) was disabled - false positive");
+  if(fired && ! enabled) {
+    Serial.println("Alarm 1 flag is active but alarm is disabled - skipping alarm");
   }
 
-  //We clear the alarm flag on false-positive alarmevents
-  rtc.clearAlarm(1);
+  if(fired && ! modeMatchingNow) {
+    Serial.println("Alarm 1 flag is active the alarm-mode does not fit the current day of week - skipping alarm");
+  }
+
+  if(fired) {
+    //We clear the alarm flag on false-positive alarm events
+    rtc.clearAlarm(1);
+  }
   return false;
 }
 
 void clearAlarmClockFlag() {
   rtc.clearAlarm(1);
-}
-
-void setAlarmClock(DateTime dt) {
-  rtc.setAlarm1(dt, DS3231_A1_Hour);
 }
 
 void toggleAlarmClockEnabled() {
