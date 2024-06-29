@@ -1,20 +1,30 @@
 const rect rAlarmOk = {80, 170, 160, 50};
 const int xAlarmOk = 143;
 const int yAlarmOk = 185;
-const int xAlarmRangeWakeUp[] = {10, 200};
-const int yAlarmRangeWakeUp[] = {10, 130};
+const int xAlarmRangeText[] = {10, 200};
+const int yAlarmRangeText[] = {10, 130};
 const rect rAlarmResetWakeup = {0, 0, 320, 170};
 const int alarmRefreshMessageSeconds = 5;
 
 DateTime alarmStart;
 DateTime alarmLastWakeupPrint;
 
-void showAlarmScreen() {
-  Serial.println("----Entering alarm-Screen - Alarm has fired----");
+void showAlarmScreenClock() {
+  Serial.println("----Entering alarm-Screen (clock) - Alarm has fired----");
 
   clearAlarmClockFlag();
-  missedAlarmNotification = false;
+  missedAlarmNotification = handleAlarmScreenAndIsMissedAlarm();
+  handleExit();
+}
 
+void showAlarmScreenTimer() {
+  Serial.println("----Entering alarm-Screen (timer)----");
+  handleAlarmScreenAndIsMissedAlarm();
+  handleExit();
+}
+
+
+boolean handleAlarmScreenAndIsMissedAlarm() {
   alarmStart = rtc.now();
   clearScreen();
 
@@ -29,12 +39,11 @@ void showAlarmScreen() {
 
   clearScreen();
   printOkButton();
-  printWakeUp();
+  printAlarmText();
 
   while(true) {
     if(isExitByTouch()) {
-      handleExit();
-      return;
+      return false;
     }
 
     boolean isPlaying = isMp3Playing();
@@ -46,15 +55,12 @@ void showAlarmScreen() {
     }
 
     if(isExitByTouch()) {
-      handleExit();
-      return;
+      return false;
     }
 
     if(alarmStart.unixtime() + gAlarmAutoShutdownSeconds < now.unixtime()) {
       Serial.println("Stop the alarm due to timeout - user did not react.");
-      missedAlarmNotification = true;
-      handleExit();
-      return;
+      return true;
     } else {
       if(! isPlaying) {
         playMp3RandomAlarm();
@@ -62,22 +68,24 @@ void showAlarmScreen() {
     }
 
     if(isExitByTouch()) {
-      handleExit();
-      return;
+      return false;
     }
 
     if(alarmLastWakeupPrint.unixtime() + alarmRefreshMessageSeconds < rtc.now().unixtime()) {
       Serial.println("print wake-up message");
-      printWakeUp();
+      printAlarmText();
     }
   }
+
+  //should never happen
+  return true;
 }
 
-void printWakeUp() {
+void printAlarmText() {
   printRect(&rAlarmResetWakeup, TFT_BLACK, true);
-  int wx = random(xAlarmRangeWakeUp[0], xAlarmRangeWakeUp[1]);
-  int wy = random(yAlarmRangeWakeUp[0], yAlarmRangeWakeUp[1]);
-  tft.drawString("Wake up!", wx, wy, TFT_BIG_FONT);
+  int wx = random(xAlarmRangeText[0], xAlarmRangeText[1]);
+  int wy = random(yAlarmRangeText[0], yAlarmRangeText[1]);
+  tft.drawString("Wall-eee", wx, wy, TFT_BIG_FONT);
   alarmLastWakeupPrint = rtc.now();
 }
 

@@ -28,11 +28,6 @@ const rect rResetNotificationCenter = {0, 0, 50, 50};
 const int xRangeLightBulb[] = {100, 170};
 const int yRangeLightBulb[] = {50, 120};
 
-const rect rMp3Player = {15, 60, 25, 30};
-
-const int xRangeFirmwareupdateInvisible[] = {0, 80};  //this is invisible - updates are triggered after 3x touching this place
-const int yRangeFirmwareupdateInvisible[] = {100, 140};
-
 
 //------------CLOCK and ALARM snf VOLTAGE----------------
 //Note that these values will bel ost in deep-sleep
@@ -186,13 +181,13 @@ void printBatteryStatistics(float batVoltage, float batCurrent) {
 
   if(showBatteryStatistics == 1) {
     String output = String(batVoltage, 2) + "v";
-    tft.drawString(output, xPosVoltage, yPosBatteryStatistics, 4);
+    tft.drawString(output, xPosVoltage, yPosBatteryStatistics, TFT_BIG_FONT);
   } else {
     String output = batCurrent < 0 ? "-" : "";
     output += abs(batCurrent) < 10 ? "0" : "";
     output += abs(batCurrent) < 100 ? "0" : "";
     output += String((int)abs(batCurrent)) + "ma";
-    tft.drawString(output, xPosCurrentMilliAmps, yPosBatteryStatistics, 4);
+    tft.drawString(output, xPosCurrentMilliAmps, yPosBatteryStatistics, TFT_BIG_FONT);
   }
 
   tft.setTextColor(TFT_MAIN_COLOR);

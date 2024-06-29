@@ -10,6 +10,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ElegantOTA.h>
+#include <Preferences.h>
 #include "timezone.h"
 #include "types.h"
 #include "./img/bitmap.h"
@@ -29,15 +30,14 @@
 //===============================================================
 
 //================= OTHER CONSTANTS =============================
-const int gSleepSecondsAfterTouched = 40;             //after the last touch event the time is monitored. If x seconds past and no further touch event occured the ESP32 will go to sleep mode (=standby)
+const int gSleepSecondsAfterTouched = 40;             //-1 = Disable. After the last touch event the time is monitored. If x seconds past and no further touch event occured the ESP32 will go to sleep mode (=standby)
 const int gVoltageReprintAfterSeconds = 2;            //interval to read and print battery voltage (if no battery is connected, will reprint "USB")
 const int gAlarmAutoShutdownSeconds = 120;            //an active alarm will be turned off after this time has passed and the user did not interact
 const int gDefaultNotificationVolume = 17;            //Default MP3 playback volume on alarm
 const int gDefaultLightBulbDelaySeconds = 0;          //x seconds after the alarm starts, the light bulb will turn on (-1 = light always off at alarm, 0 = immediate on at alarm)
 const int gLightBulbAutoShutdownSeconds = 30;         //when the light bulb is turned on, it will shutdown after the given seconds (safety feature)
-const float gLowVoltage = 3.4;                        //light bulb will be disabled when the battery voltage drops below this level
-const float gMp3PlayerLowVoltage = 3.2;               //When using the MP3 player, it will stop and go back to the main screen, once this voltage is reached. This allows the system to go to standby.
-const int gMp3PlayerDisplayAutoShutdownSeconds = 15;  //When the Display is set to "Auto" mode, the MP3 player will turn off the display when no interaction occured for x seconds
+const float gLowVoltage = 3.3;                        //Sereval things will be disabled on low voltage: Light Bulb, MP3 Player will exit, Timer will exit when not running...
+const int gDisplayAutoShutdownSeconds = 15;           //When the Display is set to "Auto" mode, the MP3 player and timer will turn off the display when no interaction occured for x seconds
 const int gMp3CountInitSound = 2;                     //the first two MP3s are played only at first boot
 
 const wifi_auth_mode_t gWifiSecurityMode = WIFI_AUTH_WPA2_WPA3_PSK;   //WiFi Security Mode
@@ -85,6 +85,9 @@ RTC_DATA_ATTR int notificationVolume = gDefaultNotificationVolume;
 RTC_DATA_ATTR int mp3TrackCount = 0;
 RTC_DATA_ATTR int showBatteryStatistics = 0;  //1=show voltage, 2=show current
 RTC_DATA_ATTR int lightBulbDelaySecondsOnAlarm = gDefaultLightBulbDelaySeconds;
+
+RTC_DATA_ATTR int grTimerFavoriteMinutes = 1;
+RTC_DATA_ATTR int grTimerFavoriteSeconds = 23;
 
 RTC_DATA_ATTR boolean rtcLostPowerNotification = false;
 RTC_DATA_ATTR boolean missedAlarmNotification = false;

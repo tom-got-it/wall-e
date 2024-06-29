@@ -104,7 +104,9 @@ boolean isAlarmClockTriggered() {
 }
 
 void clearAlarmClockFlag() {
-  rtc.clearAlarm(1);
+  if(rtc.alarmFired(1)) {
+    rtc.clearAlarm(1);
+  }
 }
 
 void toggleAlarmClockEnabled() {

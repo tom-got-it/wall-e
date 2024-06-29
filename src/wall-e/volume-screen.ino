@@ -1,9 +1,27 @@
 void setupVolume() {
+  if(isBatteryLowVoltage()) {
+    Serial.println("Exit volume setuop screen due to low battery voltage");
+    drawVoltageWarningScreen();
+    delay(3000);
+    return;
+  }
+
   setupVolumeImpl();
-  drawWaitingScreen();
+
+  int additionalDelay = 0;
+  if(isBatteryLowVoltage()) {
+    drawVoltageWarningScreen();
+    additionalDelay = 2000;
+  } else {
+    drawWaitingScreen();
+  }
 
   stopMp3Playback();
   setMp3Volume(notificationVolume);
+
+  if(additionalDelay > 0) {
+    delay(additionalDelay);
+  }
 }
 
 void setupVolumeImpl() {
@@ -33,6 +51,10 @@ void setupVolumeImpl() {
       printRect(&rReset, TFT_BLACK, true);
       drawTwoDigitsAndGetXPos(notificationVolume, 125, 110, TFT_MAIN_FONT);
       reprint = false;
+    }
+
+    if(isBatteryLowVoltage()) {
+      return;
     }
     
     uint16_t x,y;

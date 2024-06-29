@@ -1,5 +1,5 @@
 const rect rMp3Exit = {30, 5, -20, 25};
-const rect rMp3Voltage = {75, 220, 80, 20};
+const rect rMp3Voltage = {75, 220, 320, 20};
 
 const rect rMp3PlayerReset = {0, 60, 320, 31};
 const rect rMp3BackTri = {30, 60, -25, 30};
@@ -35,6 +35,13 @@ boolean mp3LightBulbOn = false;
 
 
 void showMp3Player() {
+  if(isBatteryLowVoltage()) {
+    Serial.println("Exit MP3 player due to low battery voltage");
+    drawVoltageWarningScreen();
+    delay(3000);
+    return;
+  }
+
   clearScreen();
 
   DateTime now = rtc.now();
@@ -66,7 +73,8 @@ void exitMp3Player() {
 
   //Drwa waiting / warning screens while resetting everything
   int delayMillis = 1;
-  if(isMp3PlayerLowVoltage()) {
+  if(isBatteryLowVoltage()) {
+    Serial.println("Exit MP3 player due to low battery voltage");
     drawVoltageWarningScreen();
     delayMillis = 3000;
   } else {
@@ -140,22 +148,22 @@ void drawMp3PlayerAddonButtons() {
 
   if(mp3DisplayAuto) {
     printRect(&rMp3Display, TFT_MAIN_COLOR, false);
-    tft.drawString("TFT: Auto", rMp3Display.x + 14, rMp3Display.y + 5, TFT_BIG_FONT);
+    tft.drawString("Display", rMp3Display.x + 25, rMp3Display.y + 5, TFT_BIG_FONT);
   } else {
     printRect(&rMp3Display, TFT_MAIN_COLOR, true);
     tft.setTextColor(TFT_BLACK);
-    tft.drawString("TFT: On", rMp3Display.x + 20, rMp3Display.y + 5, TFT_BIG_FONT);
+    tft.drawString("Display", rMp3Display.x + 25, rMp3Display.y + 5, TFT_BIG_FONT);
     tft.setTextColor(TFT_MAIN_COLOR);
   }
 
   if(mp3LightBulbOn) {
     printRect(&rMp3LightBulb, TFT_MAIN_COLOR, true);
     tft.setTextColor(TFT_BLACK);
-    tft.drawString("Light: On", rMp3LightBulb.x + 19, rMp3LightBulb.y + 5, TFT_BIG_FONT);
+    tft.drawString("Light", rMp3LightBulb.x + 40, rMp3LightBulb.y + 5, TFT_BIG_FONT);
     tft.setTextColor(TFT_MAIN_COLOR);
   } else {
     printRect(&rMp3LightBulb, TFT_MAIN_COLOR, false);
-    tft.drawString("Light: Off", rMp3LightBulb.x + 17, rMp3LightBulb.y + 5, TFT_BIG_FONT);
+    tft.drawString("Light", rMp3LightBulb.x + 40, rMp3LightBulb.y + 5, TFT_BIG_FONT);
   }
 }
 
@@ -174,7 +182,8 @@ void drawMp3PlayerVoltage() {
         tft.setTextColor(TFT_RED);
       }
 
-      String output = String(batVoltage, 2) + "v";
+      String output = String(batVoltage, 2) + "V";
+      output = output + "   @" + String(padByZeroThreeDigits(getBatCurrentMillis())) + "mA";
       tft.drawString(output, rMp3Voltage.x, rMp3Voltage.y, TFT_SMALL_FONT);
 
       tft.setTextColor(TFT_MAIN_COLOR);
@@ -191,7 +200,7 @@ void mp3PlayerLoop() {
 
     //Voltage test
     drawMp3PlayerVoltage();
-    if(isMp3PlayerLowVoltage()) {
+    if(isBatteryLowVoltage()) {
       return;
     }
 
@@ -295,10 +304,6 @@ boolean handleMp3PlayerTouchAndIsExit() {
     return false;
 }
 
-boolean isMp3PlayerLowVoltage() {
-  return ! isOnUsbPower() && getBatVoltage() <= gMp3PlayerLowVoltage;
-}
-
 /**
 * Every two seconds, test if MP3 is still playing and possibly advance to the next MP3
 */
@@ -390,7 +395,7 @@ void mp3PlayerDisplayAutoOffTest() {
     return;
   }
 
-  if(mp3LastTouched.unixtime() + gMp3PlayerDisplayAutoShutdownSeconds < rtc.now().unixtime()) {
+  if(mp3LastTouched.unixtime() + gDisplayAutoShutdownSeconds < rtc.now().unixtime()) {
       turnOffDisplay();
       mp3DisplayIsOn = false;
   }

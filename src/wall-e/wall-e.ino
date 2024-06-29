@@ -11,7 +11,7 @@ void loop() {
       showFirmwareUpdateScreen();
       lastToched = rtc.now();
     } else if(isAlarmClockTriggered()) {
-      showAlarmScreen();
+      showAlarmScreenClock();
       rePrintMainScreen();
       lastToched = rtc.now();
     } else {
@@ -24,6 +24,11 @@ void loop() {
 
 void exitLoop() {
   DateTime now = rtc.now();
+
+  if(gSleepSecondsAfterTouched < 0) {
+    //do not go to sleep
+    return;
+  }
 
   //Note that we don't go to sleep when updates are in progress
   //We must leave the main-loop in order for the update-server to handle incoming HTTP-requests
