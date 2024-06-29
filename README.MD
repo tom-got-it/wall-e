@@ -56,6 +56,7 @@ Here is a small list of features:
   * can be turned on and off
   * is stored in memory of the RTC clock and still available after power loss (as long as the RTC is powered by a CR2032 battery)
   * several adjustable modes: alarm each day, alarm at weekdays only, alarm at weekend only
+* Kitchen Timer with animations
 * Alarm auto-shutdown when the user did not react within a certain time
 * Notification center
   * Shows missed alarms
