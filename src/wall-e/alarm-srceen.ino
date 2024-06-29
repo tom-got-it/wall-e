@@ -98,7 +98,7 @@ void printOkButton() {
 }
 
 void handleExit() {
-  myMP3.stop();
+  stopMp3Playback();
   disableLightBulb();
 }
 
