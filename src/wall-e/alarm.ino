@@ -230,15 +230,7 @@ uint32_t getNextTimeChangeUnixtime() {
       continue;
     }
 
-    //--------------
-    //Now, handle all timezone changes not yet applied.
-    //Note that when the system was offline, multiple clock adjustments might be necessary in a row.
-    //--------------
-
-    DateTime now = rtc.now();
-    if(now.unixtime() >= timezone.when.unixtime()) {
-      return timezone.when.unixtime();
-    }
+    return timezone.when.unixtime();
   }
   return 0;
 }
