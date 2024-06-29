@@ -29,7 +29,7 @@ boolean handleAlarmScreenAndIsMissedAlarm() {
   clearScreen();
 
   boolean lightBulbWasActive = false;
-  if(lightBulbDelaySecondsOnAlarm == 0) {
+  if(pLightBulbDelaySecondsOnAlarm == 0) {
     lightBulbWasActive = startLightBulb();
   }
 
@@ -50,7 +50,7 @@ boolean handleAlarmScreenAndIsMissedAlarm() {
     DateTime now = rtc.now();
 
     testLightBulbStillActive();
-    if(! lightBulbWasActive && lightBulbDelaySecondsOnAlarm > 0 && alarmStart.unixtime() + lightBulbDelaySecondsOnAlarm <= now.unixtime()) {
+    if(! lightBulbWasActive && pLightBulbDelaySecondsOnAlarm > 0 && alarmStart.unixtime() + pLightBulbDelaySecondsOnAlarm <= now.unixtime()) {
       lightBulbWasActive = startLightBulb();
     }
 

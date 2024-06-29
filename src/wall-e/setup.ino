@@ -13,6 +13,7 @@ void doSetup() {
 
     printWakeupReason();
 
+    setupPreferencesIfFirstBoot();
     setupRTC();
     setupBatterySensor();
     setupLightBulb();
@@ -21,7 +22,7 @@ void doSetup() {
     setupMp3();
     prepareWebServer();
 
-    firstBootTime = rtc.now();
+    firstBootTimeUxt = rtc.now().unixtime();
 
     registerDeepSleepWakeups();
     checkGoBackToDeepSleep();
@@ -41,6 +42,17 @@ void doSetup() {
     drawEmptyMainScreen();
 
     Serial.println("Ending setup...");
+}
+
+void setupPreferencesIfFirstBoot() {
+  if(bootCount == 1) {
+    Serial.println("----------Setup preferences on first boot--------------");
+    if(CLEAR_PREFERENCES) {
+      Serial.println("Restoring defaults due to CLEAR_PREFERENCES flag");
+      clearPrefs();
+    }
+    initPrefs();
+  }
 }
 
 void setupTFT() {
@@ -142,24 +154,19 @@ void setupRTC() {
     rtc.writeSqwPinMode(DS3231_OFF);    // stop oscillating signals at SQW Pin, otherwise setAlarm1 will fail
     rtc.disable32K();                   //we don't need the 32K Pin, so disable it
 
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    Serial.print("New Time: ");
-    serialPrintTime(rtc.now());
+    adjustClockAndSetupTimezoneHandling(DateTime(F(__DATE__), F(__TIME__)));
 
-    rtc.clearAlarm(1);                // set alarm 1, 2 flag to false (so alarm 1, 2 didn't happen so far)
+    rtc.clearAlarm(1);                
     rtc.disableAlarm(1);
-
-    lastTimezoneChange = rtc.now();
-    setupNextTimezoneAlarm();
 
     //keep the lost power flag in memory until the user opens the notifications
     rtcLostPowerNotification = rtcLostPowerNotification || lostPower;
   } else if(bootCount == 1) {
-    Serial.println("Setup RTC on first boot - clear alarms - setup timezone handling");
+    Serial.println("Setup RTC on first boot");
+    Serial.println("clear clock alarm flag");
     clearAlarmClockFlag();
-
-    lastTimezoneChange = rtc.now();
-    setupNextTimezoneAlarm();
+    Serial.println("apply pending timezone changes");
+    applyPendingTimezoneChanges();
   }
 
   if(isAlarmClockEnabled()) {
@@ -183,7 +190,7 @@ void setupMp3() {
   Serial.println(mp3TrackCount);
 
   if(bootCount == 1) {
-    setMp3Volume(notificationVolume);
+    setMp3Volume(pNotificationVolume);
   }
 
   //No option to wakeup :/
@@ -269,7 +276,7 @@ void checkGoBackToDeepSleep() {
   }
 
   //handle a possible time zone alarm
-  handleTimezoneAlarm();
+  handleTimezoneAlarmAndIsClockAdjusted();
 
   //Wake-up triggered by RTC
   if(isAlarmClockTriggered()) {

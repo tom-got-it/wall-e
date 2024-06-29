@@ -5,7 +5,9 @@ void setup() {
 }
 
 void loop() {
-    handleTimezoneAlarm();
+    if(handleTimezoneAlarmAndIsClockAdjusted()) {
+      lastToched = rtc.now();
+    }
 
     if(isFirmwareUpdateInProgress) {
       showFirmwareUpdateScreen();

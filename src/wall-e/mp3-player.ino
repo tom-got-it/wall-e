@@ -45,7 +45,7 @@ void showMp3Player() {
   clearScreen();
 
   DateTime now = rtc.now();
-  mp3CurrentVolume = notificationVolume;
+  mp3CurrentVolume = pNotificationVolume;
   mp3IsPlaying = false;
   mp3TitlePlayed = 1;
 
@@ -83,7 +83,7 @@ void exitMp3Player() {
 
   //Do not call MP3-Player functions here, since they will repaint on the screen
   stopMp3Playback();
-  setMp3Volume(notificationVolume);
+  setMp3Volume(pNotificationVolume);
   disableLightBulb();
 
   delay(delayMillis);

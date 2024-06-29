@@ -57,8 +57,6 @@ void showSetupScreen() {
       continue;
     }
 
-    //Clock might have changed -> set alarm for next DST change
-    setupNextTimezoneAlarm();
     Serial.println("----Leaving clock setup screen----");
     return;
   }
@@ -294,17 +292,18 @@ byte executeSetupLoopAlarmMode() {
 
 byte executeSetupLoopLight() {
   boolean reprint = true;
+  boolean changed = false;
   while(true) {
     if(reprint) {
       printRect(&rSetupReset, TFT_BLACK, true);
 
-      if(lightBulbDelaySecondsOnAlarm < 0) {
+      if(pLightBulbDelaySecondsOnAlarm < 0) {
         tft.drawString("off", 130, 115, TFT_BIG_FONT);
-      } else if (lightBulbDelaySecondsOnAlarm == 0) {
+      } else if (pLightBulbDelaySecondsOnAlarm == 0) {
         tft.drawString("on", 130, 115, TFT_BIG_FONT);
       } else {
         String str = "after ";
-        str = str + lightBulbDelaySecondsOnAlarm;
+        str = str + pLightBulbDelaySecondsOnAlarm;
         str = str + " seconds";
         tft.drawString(str, 55, 115, TFT_BIG_FONT);
       }
@@ -315,32 +314,42 @@ byte executeSetupLoopLight() {
     boolean touched = tft.getTouch(&x, &y);
 
     if(touched && touchedRect(x, y, &setupTop2)) {
-      lightBulbDelaySecondsOnAlarm = lightBulbDelaySecondsOnAlarm + 1;
-      if(lightBulbDelaySecondsOnAlarm > gAlarmAutoShutdownSeconds - 5) {
-        lightBulbDelaySecondsOnAlarm = -1;
+      pLightBulbDelaySecondsOnAlarm = pLightBulbDelaySecondsOnAlarm + 1;
+      if(pLightBulbDelaySecondsOnAlarm > gAlarmAutoShutdownSeconds - 5) {
+        pLightBulbDelaySecondsOnAlarm = -1;
       }
+      changed = true;
       reprint = true;
     }
 
     if(touched && touchedRect(x, y, &setupBottom2)) {
-      lightBulbDelaySecondsOnAlarm = lightBulbDelaySecondsOnAlarm - 1;
-      if(lightBulbDelaySecondsOnAlarm < - 1) {
-        lightBulbDelaySecondsOnAlarm = gAlarmAutoShutdownSeconds - 5;
+      pLightBulbDelaySecondsOnAlarm = pLightBulbDelaySecondsOnAlarm - 1;
+      if(pLightBulbDelaySecondsOnAlarm < - 1) {
+        pLightBulbDelaySecondsOnAlarm = gAlarmAutoShutdownSeconds - 5;
       }
+      changed = true;
       reprint = true;
     }
 
 
     if(touched && touchedRect(x, y, &rSetupOk)) {
+      if(changed) {
+        savePrefs();
+      }
       return SETUP_MODE_EXIT_OK;
     }
 
-
     if(touched && touchedRect(x, y, &rSetupLeft)) {
+      if(changed) {
+        savePrefs();
+      }
       return SETUP_MODE_ALARM_MODE;
     }
 
     if(touched && touchedRect(x, y, &rSetupRight)) {
+      if(changed) {
+        savePrefs();
+      }
       return SETUP_MODE_CLOCK;
     }
 
@@ -411,11 +420,7 @@ byte executeSetupLoopClock() {
       if(clockChanged) {
         //Adjust RTC
         DateTime now = rtc.now();
-        rtc.adjust(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
-
-        //we do so as if the last timezone change occurred now such that the next timezone change is correctly determined
-        now = rtc.now();
-        lastTimezoneChange = now;
+        adjustClockAndSetupTimezoneHandling(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
       }
       return SETUP_MODE_EXIT_OK;
     }
@@ -425,11 +430,7 @@ byte executeSetupLoopClock() {
       if(clockChanged) {
         //Adjust RTC
         DateTime now = rtc.now();
-        rtc.adjust(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
-
-        //we do so as if the last timezone change occurred now such that the next timezone change is correctly determined
-        now = rtc.now();
-        lastTimezoneChange = now;
+        adjustClockAndSetupTimezoneHandling(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
       }
       return SETUP_MODE_LIGHT;
     }
@@ -438,11 +439,7 @@ byte executeSetupLoopClock() {
       if(clockChanged) {
         //Adjust RTC
         DateTime now = rtc.now();
-        rtc.adjust(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
-
-        //we do so as if the last timezone change occurred now such that the next timezone change is correctly determined
-        now = rtc.now();
-        lastTimezoneChange = now;
+        adjustClockAndSetupTimezoneHandling(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
       }
       return SETUP_MODE_DATE;
     }
@@ -523,11 +520,7 @@ byte executeSetupLoopDate() {
       if(clockChanged) {
         //Adjust RTC
         DateTime now = rtc.now();
-        rtc.adjust(DateTime(year + 2000, month, day, now.hour(), now.minute(), now.second()));
-
-        //we do so as if the last timezone change occurred now such that the next timezone change is correctly determined
-        now = rtc.now();
-        lastTimezoneChange = now;
+        adjustClockAndSetupTimezoneHandling(DateTime(year + 2000, month, day, now.hour(), now.minute(), now.second()));
       }
       return SETUP_MODE_EXIT_OK;
     }
@@ -537,11 +530,7 @@ byte executeSetupLoopDate() {
       if(clockChanged) {
         //Adjust RTC
         DateTime now = rtc.now();
-        rtc.adjust(DateTime(year + 2000, month, day, now.hour(), now.minute(), now.second()));
-
-        //we do so as if the last timezone change occurred now such that the next timezone change is correctly determined
-        now = rtc.now();
-        lastTimezoneChange = now;
+        adjustClockAndSetupTimezoneHandling(DateTime(year + 2000, month, day, now.hour(), now.minute(), now.second()));
       }
       return SETUP_MODE_CLOCK;
     }

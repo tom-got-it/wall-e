@@ -21,7 +21,7 @@
 //---------------------------------------------------------------
 
 //================= GLOBAL DEFINITIONS ==========================
-#define FIRMWARE_VERSION "2024.06.8"          //Put the firmware version here - just for info
+#define FIRMWARE_VERSION "2024.06.9"          //Put the firmware version here - just for info
 #define CALIBRATION_FILE "/calibrationData11" //Internal filename for the calibrated display data - no need to modify this
 #define REPEAT_CAL false                      //Repeat display calibration
 #define INIT_CLOCK false                      //Usually this not required, because the clock will detect when it lost power
@@ -33,8 +33,6 @@
 const int gSleepSecondsAfterTouched = 40;             //-1 = Disable. After the last touch event the time is monitored. If x seconds past and no further touch event occured the ESP32 will go to sleep mode (=standby)
 const int gVoltageReprintAfterSeconds = 2;            //interval to read and print battery voltage (if no battery is connected, will reprint "USB")
 const int gAlarmAutoShutdownSeconds = 120;            //an active alarm will be turned off after this time has passed and the user did not interact
-const int gDefaultNotificationVolume = 17;            //Default MP3 playback volume on alarm
-const int gDefaultLightBulbDelaySeconds = 0;          //x seconds after the alarm starts, the light bulb will turn on (-1 = light always off at alarm, 0 = immediate on at alarm)
 const int gLightBulbAutoShutdownSeconds = 30;         //when the light bulb is turned on, it will shutdown after the given seconds (safety feature)
 const float gLowVoltage = 3.3;                        //Sereval things will be disabled on low voltage: Light Bulb, MP3 Player will exit, Timer will exit when not running...
 const int gDisplayAutoShutdownSeconds = 15;           //When the Display is set to "Auto" mode, the MP3 player and timer will turn off the display when no interaction occured for x seconds
@@ -45,6 +43,13 @@ const wifi_auth_mode_t gWifiSecurityMode = WIFI_AUTH_WPA2_WPA3_PSK;   //WiFi Sec
 const char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 //===============================================================
 
+//================= STORED PREFERENCES ==================================================
+//==This settings can be modified by the the user and will be restored after power-loss==
+#define PREFERENCES_NAME "wall-eee"                   //Some settings will be stored to the onboard flash memory. This is the namespace for these settings.
+#define CLEAR_PREFERENCES false                       //Set to true to clear alle previously stored preferences. This will restore the default values.
+const int gDefaultNotificationVolume = 17;            //Default MP3 playback volume on alarm
+const int gDefaultLightBulbDelaySeconds = 20;         //x seconds after the alarm starts, the light bulb will turn on (-1 = light always off at alarm, 0 = immediate on at alarm)
+//=======================================================================================
 
 
 
@@ -55,6 +60,7 @@ const char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "
 //================= GLOBAL DEFINITIONS ==========================
 #define FPSerial Serial1
 #define DEG2RAD 0.0174532925
+#define DATE_TIME_MIN 946684800
 //===============================================================
 
 //================= OTHER CONSTANTS =============================
@@ -78,13 +84,14 @@ const uint64_t WAKEUP_BITMASK_RTC = 0x8000000; // PIN27
 
 
 //= ESP32 RTC KEPT VARS (will be preserved in Deep-Sleep mode) ===
-RTC_DATA_ATTR DateTime firstBootTime;
-RTC_DATA_ATTR DateTime lastTimezoneChange;
+RTC_DATA_ATTR uint32_t firstBootTimeUxt;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR int notificationVolume = gDefaultNotificationVolume;
 RTC_DATA_ATTR int mp3TrackCount = 0;
 RTC_DATA_ATTR int showBatteryStatistics = 0;  //1=show voltage, 2=show current
-RTC_DATA_ATTR int lightBulbDelaySecondsOnAlarm = gDefaultLightBulbDelaySeconds;
+
+RTC_DATA_ATTR uint32_t pLastTimezoneChangeUxt;
+RTC_DATA_ATTR int pLightBulbDelaySecondsOnAlarm = gDefaultLightBulbDelaySeconds;
+RTC_DATA_ATTR int pNotificationVolume = gDefaultNotificationVolume;
 
 RTC_DATA_ATTR int grTimerFavoriteMinutes = 1;
 RTC_DATA_ATTR int grTimerFavoriteSeconds = 23;
@@ -109,4 +116,6 @@ Adafruit_INA260 batterySensor = Adafruit_INA260();
 
 AnimatedGIF gif;
 AsyncWebServer server(80);
+
+Preferences preferences;
 //================================================================

@@ -20,16 +20,16 @@ void showNotificationScreen() {
   }
   tft.setTextColor(TFT_MAIN_COLOR);
 
-  String startStr = "Turned on at " + getFormattedTime(firstBootTime, false) + ".";
+  String startStr = "Turned on at " + getFormattedTime(DateTime(firstBootTimeUxt), false) + ".";
   tft.drawString(startStr, 40, 70, TFT_SMALL_FONT);
 
   String bootStr = String(bootCount) + " times woke up from standby.";
   tft.drawString(bootStr, 40, 90, TFT_SMALL_FONT);
 
-  timezone_change nextTsChange = getNextTimezoneChangeElseFirst();
+  uint32_t nextTsChange = getNextTimeChangeUnixtime();
   String timezoneStr = "";
-  if(rtc.now().unixtime() < nextTsChange.when.unixtime()) {
-    timezoneStr = "Next time-change at " + getFormattedTime(nextTsChange.when, false) + ".";
+  if(nextTsChange > 0) {
+    timezoneStr = "Next time-change at " + getFormattedTime(DateTime(nextTsChange), false) + ".";
   } else {
     timezoneStr = "No time-changes by timezone configured";
   }

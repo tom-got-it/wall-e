@@ -17,7 +17,7 @@ void setupVolume() {
   }
 
   stopMp3Playback();
-  setMp3Volume(notificationVolume);
+  setMp3Volume(pNotificationVolume);
 
   if(additionalDelay > 0) {
     delay(additionalDelay);
@@ -49,7 +49,7 @@ void setupVolumeImpl() {
   while (true) {
     if(reprint) {
       printRect(&rReset, TFT_BLACK, true);
-      drawTwoDigitsAndGetXPos(notificationVolume, 125, 110, TFT_MAIN_FONT);
+      drawTwoDigitsAndGetXPos(pNotificationVolume, 125, 110, TFT_MAIN_FONT);
       reprint = false;
     }
 
@@ -66,14 +66,16 @@ void setupVolumeImpl() {
       }
 
       if(touchedRect(x, y, &rTop)) {
-        notificationVolume = notificationVolume + 1;
-        if (notificationVolume > getMp3MaxPossibleVolume()) { notificationVolume = getMp3MaxPossibleVolume(); }
+        pNotificationVolume = pNotificationVolume + 1;
+        if (pNotificationVolume > getMp3MaxPossibleVolume()) { pNotificationVolume = getMp3MaxPossibleVolume(); }
+        savePrefs();
         reprint = true;
       }
 
       if(touchedRect(x, y, &rBottom)) {
-        notificationVolume = notificationVolume - 1;
-        if (notificationVolume < 1) { notificationVolume = 1; }
+        pNotificationVolume = pNotificationVolume - 1;
+        if (pNotificationVolume < 1) { pNotificationVolume = 1; }
+        savePrefs();
         reprint = true;
       }
 
@@ -95,7 +97,7 @@ void testVolume() {
     return;
   }
 
-  setMp3Volume(notificationVolume);
+  setMp3Volume(pNotificationVolume);
   if(! isMp3Playing()) {
     playMp3RandomFile();
   }

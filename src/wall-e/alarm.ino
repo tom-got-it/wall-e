@@ -122,77 +122,123 @@ DateTime getAlarmClock() {
   return rtc.getAlarm1();
 }
 
-void handleTimezoneAlarm() {
-    const int tsLength = sizeof(TIMEZONE_CHANGES) / sizeof(TIMEZONE_CHANGES[0]);
+void adjustClockAndSetupTimezoneHandling(DateTime dt) {
+  rtc.adjust(dt);
+  Serial.print("Adjusted clock - new time: ");
+  serialPrintTime(dt);
 
-    //Alarm 2 = TimeZone correction fired?
-    if(rtc.alarmFired(2)) {
-      Serial.println("Timezone alarm fired");
-
-      Serial.println("Clock needs correction due to TimeZone");
-      DateTime tz = rtc.getAlarm2();
-      DateTime now = rtc.now();
-
-      //note that the alarm will wake us up every month at the same day
-      //we need to correct the year + month
-      tz = DateTime(now.year(), now.month(), tz.day(), tz.hour(), tz.minute(), 0);
-
-      for(int i = 0; i < tsLength; i++) {
-        timezone_change elem = TIMEZONE_CHANGES[i];
-        if(elem.when.unixtime() == tz.unixtime()) {
-          Serial.print("Correct timezone by offset: ");
-          Serial.print(elem.offset, DEC);
-          Serial.println();
-
-          DateTime dt = rtc.now();
-          DateTime changed = DateTime(dt.year(), dt.month(), dt.day(), dt.hour() + elem.offset, dt.minute(), dt.second());
-          rtc.adjust(changed);
-          lastTimezoneChange = elem.when;
-
-          Serial.print("old time: ");
-          serialPrintTime(dt);
-          Serial.print("new time: ");
-          serialPrintTime(changed);
-        }
-      }
-      rtc.clearAlarm(2);
-      setupNextTimezoneAlarm();
-    }
+  pLastTimezoneChangeUxt = DATE_TIME_MIN;
+  applyPendingTimezoneChanges();
 }
 
-timezone_change getNextTimezoneChangeElseFirst() {
+boolean handleTimezoneAlarmAndIsClockAdjusted() {
+  if(rtc.alarmFired(2)) {
+    Serial.println("Timezone alarm fired");
+    return applyPendingTimezoneChanges();
+  }
+  return false;
+}
+
+boolean applyPendingTimezoneChanges() {
+  boolean adjustedClock = false;
+  DateTime lastChangeBefore = DateTime(pLastTimezoneChangeUxt);
+  Serial.println("Last timezone time change was: " + getFormattedTime(lastChangeBefore, true));
+
+  if(lastChangeBefore.unixtime() == DATE_TIME_MIN) {
+    //this happens, when the system first booted and did not store the last time zone change before
+    lastChangeBefore = rtc.now();
+  }
+  int lastTimezoneAppliedIndex = -1;
   const int tsLength = sizeof(TIMEZONE_CHANGES) / sizeof(TIMEZONE_CHANGES[0]);
 
-  DateTime now = rtc.now();
-  timezone_change candidate = TIMEZONE_CHANGES[0];
-  int i = 1;
-  while(i < tsLength && 
-      (now.unixtime() > candidate.when.unixtime() || lastTimezoneChange.unixtime() == candidate.when.unixtime())
-    ) {
-    //when setting the clock an hour back, we must make sure not to trigger the same timezone change again
+  for(int i = 0; i < tsLength; i++) {
+    timezone_change timezone = TIMEZONE_CHANGES[i];
+    if(lastChangeBefore.unixtime() >= timezone.when.unixtime()) {
+      //timezone-change already applied - continue searching
+      lastTimezoneAppliedIndex = i;
+      continue;
+    }
 
-    candidate = TIMEZONE_CHANGES[i];
-    i++;
+    //--------------
+    //Now, handle all timezone changes not yet applied.
+    //Note that when the system was offline, multiple clock adjustments might be necessary in a row.
+    //--------------
+
+    DateTime now = rtc.now();
+    if(now.unixtime() >= timezone.when.unixtime()) {
+      now = rtc.now();
+      uint32_t ntu = now.unixtime() + (timezone.offset * 60 * 60);
+
+      DateTime changed = DateTime(ntu);
+      rtc.adjust(changed);
+
+      Serial.println("Clock-adjustment (timezone): ");
+      Serial.print("old time: ");
+      serialPrintTime(now);
+      Serial.print("new time: ");
+      serialPrintTime(changed);
+
+      adjustedClock = true;
+      lastTimezoneAppliedIndex = i;
+    }
   }
-  return candidate;
+  setupNextTimezoneAlarm(lastTimezoneAppliedIndex);
+
+  //it is importent that we do not stroe rtc.now() as last timezone change - if the time was set back, the same change would be applied forever
+  if(lastTimezoneAppliedIndex >= 0) {
+    pLastTimezoneChangeUxt = TIMEZONE_CHANGES[lastTimezoneAppliedIndex].when.unixtime();
+  } else {
+    pLastTimezoneChangeUxt = DATE_TIME_MIN;
+  }
+  Serial.println("Last timezone time change stored: " + getFormattedTime(DateTime(pLastTimezoneChangeUxt), true));
+  savePrefs();
+
+  return adjustedClock;
 }
 
-void setupNextTimezoneAlarm() {
-  rtc.clearAlarm(2);
+void setupNextTimezoneAlarm(int lastTimezoneAppliedIndex) {
+  if(rtc.alarmFired(2)) {
+    rtc.clearAlarm(2);
+  }
 
-  timezone_change next = getNextTimezoneChangeElseFirst();
-  DateTime now = rtc.now();
-  if(now.unixtime() < next.when.unixtime()) {
+  int nextIndex = lastTimezoneAppliedIndex + 1;
+  const int tsLength = sizeof(TIMEZONE_CHANGES) / sizeof(TIMEZONE_CHANGES[0]);
+  if(tsLength <= nextIndex) {
+    Serial.print("No next timezone change found - alarm2 disabled");
+    rtc.disableAlarm(2);
+  } else {
+    timezone_change next = TIMEZONE_CHANGES[nextIndex];
+    rtc.setAlarm2(next.when, DS3231_A2_Date);
+
     Serial.print("Next change in timezone: ");
     serialPrintTime(next.when);
 
     Serial.print("On next DST, clock will be corrected by offset: ");
     Serial.print(next.offset, DEC);
     Serial.println();
-
-    rtc.setAlarm2(next.when, DS3231_A2_Date);
-  } else {
-    Serial.print("No next timezone change found - alarm2 disabled");
-    rtc.disableAlarm(2);
   }
+}
+
+uint32_t getNextTimeChangeUnixtime() {
+  DateTime lastChange = DateTime(pLastTimezoneChangeUxt);
+
+  const int tsLength = sizeof(TIMEZONE_CHANGES) / sizeof(TIMEZONE_CHANGES[0]);
+  for(int i = 0; i < tsLength; i++) {
+    timezone_change timezone = TIMEZONE_CHANGES[i];
+    if(lastChange.unixtime() >= timezone.when.unixtime()) {
+      //timezone-change already applied - continue searching
+      continue;
+    }
+
+    //--------------
+    //Now, handle all timezone changes not yet applied.
+    //Note that when the system was offline, multiple clock adjustments might be necessary in a row.
+    //--------------
+
+    DateTime now = rtc.now();
+    if(now.unixtime() >= timezone.when.unixtime()) {
+      return timezone.when.unixtime();
+    }
+  }
+  return 0;
 }
