@@ -93,8 +93,8 @@ RTC_DATA_ATTR uint32_t pLastTimezoneChangeUxt;
 RTC_DATA_ATTR int pLightBulbDelaySecondsOnAlarm = gDefaultLightBulbDelaySeconds;
 RTC_DATA_ATTR int pNotificationVolume = gDefaultNotificationVolume;
 
-RTC_DATA_ATTR int grTimerFavoriteMinutes = 1;
-RTC_DATA_ATTR int grTimerFavoriteSeconds = 23;
+RTC_DATA_ATTR int grTimerFavoriteMinutes = 2;
+RTC_DATA_ATTR int grTimerFavoriteSeconds = 0;
 
 RTC_DATA_ATTR boolean rtcLostPowerNotification = false;
 RTC_DATA_ATTR boolean missedAlarmNotification = false;
