@@ -39,7 +39,7 @@ Feel free to adapt, modify and share the source code. Leave me a star in github,
 |    |    |    |
 |----|----|----|
 |  ![Robot-Image](./images/robot-1.jpg) |  ![Robot-Image](./images/robot-2-light.jpg) |  ![Robot-Image](./images/robot-3.jpg) |
-|  ![Robot-Image](./images/robot-7-front.jpg) |  ![Robot-Image](./images/alarm-light-setup.jpg) |  ![Robot-Image](./images/mp3-player.jpg) |
+|  ![Robot-Image](./images/mp3-player.jpg) | ![Robot-Image](./images/timer.jpg)  |  ![Robot-Image](./images/alarm-light-setup.jpg) |
 |  ![Robot-Image](./images/notifications.jpg) |  ![Robot-Image](./images/robot-12-volume.jpg) |  ![Robot-Image](./images/robot-6-back.jpg) |
 |  ![Robot-Image](./images/robot-14.jpg) |  ![Robot-Image](./images/robot-15-light.jpg) |  ![Robot-Image](./images/robot-13-light.jpg) |
 |  ![Robot-Image](./images/inlay-l1-el.jpg) |  ![Robot-Image](./images/inlay-l2-el.jpg) |  ![Robot-Image](./images/top_view_el.jpg) |
