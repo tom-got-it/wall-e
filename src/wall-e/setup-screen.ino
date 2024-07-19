@@ -19,13 +19,28 @@ const int setupDateY = 100;
 const byte SETUP_MODE_EXIT_OK = 0;
 const byte SETUP_MODE_ALARM = 1;
 const byte SETUP_MODE_ALARM_MODE = 2;
-const byte SETUP_MODE_LIGHT = 3;
-const byte SETUP_MODE_CLOCK = 4;
-const byte SETUP_MODE_DATE = 5;
+const byte SETUP_MODE_ALARM_TIMEOUT = 3;
+const byte SETUP_MODE_LIGHT = 4;
+const byte SETUP_MODE_SNOOZE1 = 5;
+const byte SETUP_MODE_SNOOZE2 = 6;
+const byte SETUP_MODE_ALARM_TOUCH_ACTION = 7;
+const byte SETUP_MODE_CLOCK = 8;
+const byte SETUP_MODE_DATE = 9;
 
-void showSetupScreen() {
-  Serial.println("----Entering clock setup screen----");
-  byte mode = SETUP_MODE_ALARM;
+void showAlarmSetupScreen() {
+  showSetupScreen(SETUP_MODE_ALARM);
+}
+
+void showClockSetupScreen() {
+  showSetupScreen(SETUP_MODE_CLOCK);
+}
+
+void showSetupScreen(byte initialMode) {
+  Serial.println("----Entering setup screen----");
+  Serial.print("Initial mode: ");
+  Serial.println(initialMode);
+
+  byte mode = initialMode;
   while(true) {
     if(mode == SETUP_MODE_ALARM) {
       mode = doAlarmSetup();
@@ -39,8 +54,32 @@ void showSetupScreen() {
       continue;
     }
 
+    if(mode == SETUP_MODE_ALARM_TIMEOUT) {
+      mode = doAlarmTimeoutSetup();
+      delay(150);
+      continue;
+    }
+
     if(mode == SETUP_MODE_LIGHT) {
       mode = doLightSetup();
+      delay(150);
+      continue;
+    }
+
+    if(mode == SETUP_MODE_SNOOZE1) {
+      mode = doSnooze1Setup();
+      delay(150);
+      continue;
+    }
+
+    if(mode == SETUP_MODE_SNOOZE2) {
+      mode = doSnooze2Setup();
+      delay(150);
+      continue;
+    }
+
+    if(mode == SETUP_MODE_ALARM_TOUCH_ACTION) {
+      mode = doAlarmTouchActionSetup();
       delay(150);
       continue;
     }
@@ -57,7 +96,7 @@ void showSetupScreen() {
       continue;
     }
 
-    Serial.println("----Leaving clock setup screen----");
+    Serial.println("----Leaving setup screen----");
     return;
   }
 }
@@ -80,6 +119,15 @@ byte doAlarmModeSetup() {
   return executeSetupLoopAlarmMode();
 }
 
+byte doAlarmTimeoutSetup() {
+  Serial.println("Setup alarm timeout");
+
+  printCommonItems(SETUP_MODE_ALARM_TIMEOUT);
+  tft.drawString("Alarm-Timeout", 75, 10, TFT_BIG_FONT);
+
+  return executeSetupLoopAlarmTimeout();
+}
+
 byte doLightSetup() {
   Serial.println("Setup light bulb on alarm");
 
@@ -88,6 +136,34 @@ byte doLightSetup() {
 
   return executeSetupLoopLight();
 }
+
+byte doSnooze1Setup() {
+  Serial.println("Setup snooze option 1");
+
+  printCommonItems(SETUP_MODE_SNOOZE1);
+  tft.drawString("Snooze 1", 97, 10, TFT_BIG_FONT);
+
+  return executeSetupLoopSnooze(&pSnoozeMinutes1, true);
+}
+
+byte doSnooze2Setup() {
+  Serial.println("Setup snooze option 2");
+
+  printCommonItems(SETUP_MODE_SNOOZE2);
+  tft.drawString("Snooze 2", 97, 10, TFT_BIG_FONT);
+
+  return executeSetupLoopSnooze(&pSnoozeMinutes2, false);
+}
+
+byte doAlarmTouchActionSetup() {
+  Serial.println("Setup alarm touch action");
+
+  printCommonItems(SETUP_MODE_ALARM_TOUCH_ACTION);
+  tft.drawString("Display touch", 75, 10, TFT_BIG_FONT);
+
+  return executeSetupLoopAlarmTouchAction();
+}
+
 
 byte doClockSetup() {
   Serial.println("Setup clock");
@@ -121,19 +197,31 @@ void printCommonItems(byte mode) {
       printTriangleUpDown(&setupBottom3, TFT_MAIN_COLOR);
       printTriangleLeftRight(&rSetupRight, TFT_MAIN_COLOR);
       break;
-    case SETUP_MODE_LIGHT:
     case SETUP_MODE_ALARM_MODE:
       printTriangleUpDown(&setupTop2, TFT_MAIN_COLOR);
       printTriangleUpDown(&setupBottom2, TFT_MAIN_COLOR);
       printTriangleLeftRight(&rSetupLeft, TFT_MAIN_COLOR);
       printTriangleLeftRight(&rSetupRight, TFT_MAIN_COLOR);
       break;
+    case SETUP_MODE_ALARM_TIMEOUT:
+    case SETUP_MODE_LIGHT:
+    case SETUP_MODE_SNOOZE1:
+    case SETUP_MODE_SNOOZE2:
+      printTriangleUpDown(&setupTop2, TFT_MAIN_COLOR);
+      printTriangleUpDown(&setupBottom2, TFT_MAIN_COLOR);
+      printTriangleLeftRight(&rSetupLeft, TFT_MAIN_COLOR);
+      printTriangleLeftRight(&rSetupRight, TFT_MAIN_COLOR);
+      break;
+    case SETUP_MODE_ALARM_TOUCH_ACTION:
+      printTriangleUpDown(&setupTop2, TFT_MAIN_COLOR);
+      printTriangleUpDown(&setupBottom2, TFT_MAIN_COLOR);
+      printTriangleLeftRight(&rSetupLeft, TFT_MAIN_COLOR);
+      break;
     case SETUP_MODE_CLOCK:
       printTriangleUpDown(&setupTop1, TFT_MAIN_COLOR);
       printTriangleUpDown(&setupBottom1, TFT_MAIN_COLOR);
       printTriangleUpDown(&setupTop3, TFT_MAIN_COLOR);
       printTriangleUpDown(&setupBottom3, TFT_MAIN_COLOR);
-      printTriangleLeftRight(&rSetupLeft, TFT_MAIN_COLOR);
       printTriangleLeftRight(&rSetupRight, TFT_MAIN_COLOR);
       break;
     case SETUP_MODE_DATE:
@@ -281,6 +369,71 @@ byte executeSetupLoopAlarmMode() {
       if(changed) {
         setAlarmClockModeAndEnable(mode);
       }
+      return SETUP_MODE_ALARM_TIMEOUT;
+    }
+
+    if(touched) {
+      delay(80);
+    }
+  }
+}
+
+byte executeSetupLoopAlarmTimeout() {
+  boolean reprint = true;
+  boolean changed = false;
+  while(true) {
+    if(reprint) {
+      printRect(&rSetupReset, TFT_BLACK, true);
+      String str = "after ";
+      str = str + pAlarmTimeoutMinutes;
+      str = str + " minutes";
+      tft.drawString(str, 65, 115, TFT_BIG_FONT);
+      reprint = false;
+    }
+
+    uint16_t x,y;
+    boolean touched = tft.getTouch(&x, &y);
+
+    if(touched && touchedRect(x, y, &setupTop2)) {
+      pAlarmTimeoutMinutes = pAlarmTimeoutMinutes + 1;
+      if(pAlarmTimeoutMinutes > 20) {
+        pAlarmTimeoutMinutes = 1;
+      }
+      changed = true;
+      reprint = true;
+    }
+
+    if(touched && touchedRect(x, y, &setupBottom2)) {
+      pAlarmTimeoutMinutes = pAlarmTimeoutMinutes - 1;
+      if(pAlarmTimeoutMinutes < 1) {
+        pAlarmTimeoutMinutes = 20;
+      }
+      changed = true;
+      reprint = true;
+    }
+
+
+    if(touched && touchedRect(x, y, &rSetupOk)) {
+      if(changed) {
+        savePrefs();
+      }
+      validateAlarmLightSecondsMaxValue(true);
+      return SETUP_MODE_EXIT_OK;
+    }
+
+    if(touched && touchedRect(x, y, &rSetupLeft)) {
+      if(changed) {
+        savePrefs();
+      }
+      validateAlarmLightSecondsMaxValue(true);
+      return SETUP_MODE_ALARM_MODE;
+    }
+
+    if(touched && touchedRect(x, y, &rSetupRight)) {
+      if(changed) {
+        savePrefs();
+      }
+      validateAlarmLightSecondsMaxValue(true);
       return SETUP_MODE_LIGHT;
     }
 
@@ -315,7 +468,7 @@ byte executeSetupLoopLight() {
 
     if(touched && touchedRect(x, y, &setupTop2)) {
       pLightBulbDelaySecondsOnAlarm = pLightBulbDelaySecondsOnAlarm + 1;
-      if(pLightBulbDelaySecondsOnAlarm > gAlarmAutoShutdownSeconds - 5) {
+      if(! validateAlarmLightSecondsMaxValue(false)) {
         pLightBulbDelaySecondsOnAlarm = -1;
       }
       changed = true;
@@ -325,7 +478,8 @@ byte executeSetupLoopLight() {
     if(touched && touchedRect(x, y, &setupBottom2)) {
       pLightBulbDelaySecondsOnAlarm = pLightBulbDelaySecondsOnAlarm - 1;
       if(pLightBulbDelaySecondsOnAlarm < - 1) {
-        pLightBulbDelaySecondsOnAlarm = gAlarmAutoShutdownSeconds - 5;
+        pLightBulbDelaySecondsOnAlarm = pAlarmTimeoutMinutes * 60;
+        validateAlarmLightSecondsMaxValue(true);
       }
       changed = true;
       reprint = true;
@@ -343,14 +497,168 @@ byte executeSetupLoopLight() {
       if(changed) {
         savePrefs();
       }
-      return SETUP_MODE_ALARM_MODE;
+      return SETUP_MODE_ALARM_TIMEOUT;
     }
 
     if(touched && touchedRect(x, y, &rSetupRight)) {
       if(changed) {
         savePrefs();
       }
-      return SETUP_MODE_CLOCK;
+      return SETUP_MODE_SNOOZE1;
+    }
+
+    if(touched) {
+      delay(80);
+    }
+  }
+}
+
+byte executeSetupLoopSnooze(int* snoozeMinutesPtr, boolean isSnooze1) {
+  boolean reprint = true;
+  boolean changed = false;
+  while(true) {
+    if(reprint) {
+      printRect(&rSetupReset, TFT_BLACK, true);
+      String str = "";
+      str = str + *snoozeMinutesPtr;
+      str = str + " minutes";
+      tft.drawString(str, 88, 115, TFT_BIG_FONT);
+      reprint = false;
+    }
+
+    uint16_t x,y;
+    boolean touched = tft.getTouch(&x, &y);
+
+    if(touched && touchedRect(x, y, &setupTop2)) {
+      *snoozeMinutesPtr = *snoozeMinutesPtr + 1;
+      if(*snoozeMinutesPtr > 59) {
+        *snoozeMinutesPtr = 1;
+      }
+      changed = true;
+      reprint = true;
+    }
+
+    if(touched && touchedRect(x, y, &setupBottom2)) {
+      *snoozeMinutesPtr = *snoozeMinutesPtr - 1;
+      if(*snoozeMinutesPtr < 1) {
+        *snoozeMinutesPtr = 59;
+      }
+      changed = true;
+      reprint = true;
+    }
+
+
+    if(touched && touchedRect(x, y, &rSetupOk)) {
+      if(changed) {
+        savePrefs();
+      }
+      return SETUP_MODE_EXIT_OK;
+    }
+
+    if(touched && touchedRect(x, y, &rSetupLeft)) {
+      if(changed) {
+        savePrefs();
+      }
+      if(isSnooze1) {
+        return SETUP_MODE_LIGHT;
+      } else {
+        return SETUP_MODE_SNOOZE1;
+      }
+    }
+
+    if(touched && touchedRect(x, y, &rSetupRight)) {
+      if(changed) {
+        savePrefs();
+      }
+      if(isSnooze1) {
+        return SETUP_MODE_SNOOZE2;
+      } else {
+        return SETUP_MODE_ALARM_TOUCH_ACTION;
+      }
+    }
+
+    if(touched) {
+      delay(80);
+    }
+  }
+}
+
+byte executeSetupLoopAlarmTouchAction() {
+  boolean reprint = true;
+  boolean changed = false;
+
+  int touchOptions[] = {
+    ALARM_EXIT_NONE,
+    ALARM_EXIT_TOUCH,
+    ALARM_EXIT_SNOOZE1,
+    ALARM_EXIT_SNOOZE2
+  };
+  int optionsLength = 4;
+
+  int optionsIndex = 0;
+  for(int i = 0; i < optionsLength; i++) {
+    if(touchOptions[i] == pAlarmTouchAction) {
+      optionsIndex = i;
+    }
+  }
+
+  while(true) {
+    if(reprint) {
+      printRect(&rSetupReset, TFT_BLACK, true);
+      String str = "";
+      switch(pAlarmTouchAction) {
+        case ALARM_EXIT_NONE:
+          str = "do nothing";
+          break;
+        case ALARM_EXIT_TOUCH:
+          str = "exit alarm";
+          break;
+        case ALARM_EXIT_SNOOZE1:
+          str = "snooze (1)";
+          break;
+        case ALARM_EXIT_SNOOZE2:
+          str = "snooze (2)";
+          break;
+      }
+      tft.drawString(str, 88, 115, TFT_BIG_FONT);
+      reprint = false;
+    }
+
+    uint16_t x,y;
+    boolean touched = tft.getTouch(&x, &y);
+
+    if(touched && touchedRect(x, y, &setupTop2)) {
+      optionsIndex = optionsIndex + 1;
+      if(optionsIndex >= optionsLength) {
+        optionsIndex = 0;
+      }
+      pAlarmTouchAction = touchOptions[optionsIndex];
+      changed = true;
+      reprint = true;
+    }
+
+    if(touched && touchedRect(x, y, &setupBottom2)) {
+      optionsIndex = optionsIndex - 1;
+      if(optionsIndex < 0) {
+        optionsIndex = optionsLength - 1;
+      }
+      pAlarmTouchAction = touchOptions[optionsIndex];
+      changed = true;
+      reprint = true;
+    }
+
+    if(touched && touchedRect(x, y, &rSetupOk)) {
+      if(changed) {
+        savePrefs();
+      }
+      return SETUP_MODE_EXIT_OK;
+    }
+
+    if(touched && touchedRect(x, y, &rSetupLeft)) {
+      if(changed) {
+        savePrefs();
+      }
+      return SETUP_MODE_SNOOZE2;
     }
 
     if(touched) {
@@ -423,16 +731,6 @@ byte executeSetupLoopClock() {
         adjustClockAndSetupTimezoneHandling(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
       }
       return SETUP_MODE_EXIT_OK;
-    }
-
-
-    if(touched && touchedRect(x, y, &rSetupLeft)) {
-      if(clockChanged) {
-        //Adjust RTC
-        DateTime now = rtc.now();
-        adjustClockAndSetupTimezoneHandling(DateTime(now.year(), now.month(), now.day(), hour, minute, 0));
-      }
-      return SETUP_MODE_LIGHT;
     }
 
     if(touched && touchedRect(x, y, &rSetupRight)) {
@@ -539,5 +837,17 @@ byte executeSetupLoopDate() {
       delay(80);
     }
   }
+}
+
+boolean validateAlarmLightSecondsMaxValue(boolean autoCorrect) {
+  int maxSeconds = (pAlarmTimeoutMinutes * 60) - 5;
+  if(pLightBulbDelaySecondsOnAlarm > maxSeconds) {
+    if(autoCorrect) {
+      pLightBulbDelaySecondsOnAlarm = maxSeconds;
+    } else {
+      return false;
+    }
+  }
+  return true;
 }
 

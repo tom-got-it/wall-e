@@ -21,7 +21,7 @@
 //---------------------------------------------------------------
 
 //================= GLOBAL DEFINITIONS ==========================
-#define FIRMWARE_VERSION "2024.06.9"          //Put the firmware version here - just for info
+#define FIRMWARE_VERSION "2024.07.0"          //Put the firmware version here - just for info
 #define CALIBRATION_FILE "/calibrationData11" //Internal filename for the calibrated display data - no need to modify this
 #define REPEAT_CAL false                      //Repeat display calibration
 #define INIT_CLOCK false                      //Usually this not required, because the clock will detect when it lost power
@@ -32,10 +32,10 @@
 //================= OTHER CONSTANTS =============================
 const int gSleepSecondsAfterTouched = 40;             //-1 = Disable. After the last touch event the time is monitored. If x seconds past and no further touch event occured the ESP32 will go to sleep mode (=standby)
 const int gVoltageReprintAfterSeconds = 2;            //interval to read and print battery voltage (if no battery is connected, will reprint "USB")
-const int gAlarmAutoShutdownSeconds = 120;            //an active alarm will be turned off after this time has passed and the user did not interact
 const int gLightBulbAutoShutdownSeconds = 30;         //when the light bulb is turned on, it will shutdown after the given seconds (safety feature)
 const float gLowVoltage = 3.3;                        //Sereval things will be disabled on low voltage: Light Bulb, MP3 Player will exit, Timer will exit when not running...
 const int gDisplayAutoShutdownSeconds = 15;           //When the Display is set to "Auto" mode, the MP3 player and timer will turn off the display when no interaction occured for x seconds
+const int gSnoozeDisplayAutoShutdownSeconds = 15;     //Display auto-shutdown when snoozing. Display will turn back on when touched or snoozing ends.
 const int gMp3CountInitSound = 2;                     //the first two MP3s are played only at first boot
 
 const wifi_auth_mode_t gWifiSecurityMode = WIFI_AUTH_WPA2_WPA3_PSK;   //WiFi Security Mode
@@ -44,11 +44,15 @@ const char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "
 //===============================================================
 
 //================= STORED PREFERENCES ==================================================
-//==This settings can be modified by the the user and will be restored after power-loss==
-#define PREFERENCES_NAME "wall-eee"                   //Some settings will be stored to the onboard flash memory. This is the namespace for these settings.
-#define CLEAR_PREFERENCES false                       //Set to true to clear alle previously stored preferences. This will restore the default values.
-const int gDefaultNotificationVolume = 17;            //Default MP3 playback volume on alarm
-const int gDefaultLightBulbDelaySeconds = 20;         //x seconds after the alarm starts, the light bulb will turn on (-1 = light always off at alarm, 0 = immediate on at alarm)
+//==This settings can be modified by the user by touch and will be restored after power-loss==
+#define PREFERENCES_NAME "wall-eee"                       //Some settings will be stored to the onboard flash memory. This is the namespace for these settings.
+#define CLEAR_PREFERENCES false                           //Set to true to clear alle previously stored preferences. This will restore the default values.
+const int gDefaultNotificationVolume = 17;                //Default MP3 playback volume on alarm
+const int gDefaultLightBulbDelaySeconds = 20;             //x seconds after the alarm starts, the light bulb will turn on (-1 = light always off at alarm, 0 = immediate on at alarm)
+const int gDefaultAlarmTimeoutMinutes = 2;                //An active alarm will be turned off after this time has passed and the user did not interact
+const int gDefaultSnoozeMinutes1 = 5;                     //Snooze option 1 (in minutes)
+const int gDefaultSnoozeMinutes2 = 10;                    //Snooze option 2 (in minutes)
+const int gDefaultAlarmTouchAction = ALARM_EXIT_SNOOZE1;  //Default action when touching the display during an alarm and not hitting a button. Vaild options: ALARM_EXIT_NONE, ALARM_EXIT_TOUCH, ALARM_EXIT_SNOOZE1, ALARM_EXIT_SNOOZE2
 //=======================================================================================
 
 
@@ -92,6 +96,10 @@ RTC_DATA_ATTR int showBatteryStatistics = 0;  //1=show voltage, 2=show current
 RTC_DATA_ATTR uint32_t pLastTimezoneChangeUxt;
 RTC_DATA_ATTR int pLightBulbDelaySecondsOnAlarm = gDefaultLightBulbDelaySeconds;
 RTC_DATA_ATTR int pNotificationVolume = gDefaultNotificationVolume;
+RTC_DATA_ATTR int pAlarmTimeoutMinutes = gDefaultAlarmTimeoutMinutes;
+RTC_DATA_ATTR int pSnoozeMinutes1 = gDefaultSnoozeMinutes1;
+RTC_DATA_ATTR int pSnoozeMinutes2 = gDefaultSnoozeMinutes2;
+RTC_DATA_ATTR int pAlarmTouchAction = gDefaultAlarmTouchAction;
 
 RTC_DATA_ATTR int grTimerFavoriteMinutes = 2;
 RTC_DATA_ATTR int grTimerFavoriteSeconds = 0;

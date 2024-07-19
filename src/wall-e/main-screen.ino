@@ -289,7 +289,7 @@ void handleMainTouch() {
 
     if(checkTouch(x, y, xRangeSetupAlarm, yRangeSetupAlarm)) {
       Serial.println("touched alarm setup");
-      showSetupScreen();
+      showAlarmSetupScreen();
       rePrintMainScreen();
     }
 
@@ -354,6 +354,7 @@ void handleLightBulb() {
 
     //Re-Print battery data - allows to monitor current
     printBatteryData();
+    printClock();
 
     delay(80);
   }

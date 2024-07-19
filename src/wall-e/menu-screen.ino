@@ -80,11 +80,14 @@ void printMenuScreenSetup() {
   clearScreen();
   printTriangleLeftRight(&rMenuScreenExit, TFT_MAIN_COLOR);
 
-  tft.drawString("Clock/Alarm", rMenuScreen1.x + 27, rMenuScreen1.y + 7, TFT_BIG_FONT);
+  tft.drawString("Alarm", rMenuScreen1.x + 65, rMenuScreen1.y + 7, TFT_BIG_FONT);
   printRect(&rMenuScreen1, TFT_MAIN_COLOR, false);
 
-  tft.drawString("Alarm Volume", rMenuScreen2.x + 22, rMenuScreen2.y + 7, TFT_BIG_FONT);
+  tft.drawString("Volume", rMenuScreen2.x + 55, rMenuScreen2.y + 7, TFT_BIG_FONT);
   printRect(&rMenuScreen2, TFT_MAIN_COLOR, false);
+
+  tft.drawString("Clock", rMenuScreen3.x + 65, rMenuScreen3.y + 7, TFT_BIG_FONT);
+  printRect(&rMenuScreen3, TFT_MAIN_COLOR, false);
 }
 
 uint handleMenuScreenMain() {
@@ -139,14 +142,20 @@ uint handleMenuScreenSetup() {
     }
 
     if(touchedRect(x, y, &rMenuScreen1)) {
-      Serial.println("Touched menu clock/alarm setup");
-      showSetupScreen();
+      Serial.println("Touched menu alarm setup");
+      showAlarmSetupScreen();
       return -1;
     }
 
     if(touchedRect(x, y, &rMenuScreen2)) {
       Serial.println("Touched menu volume setup");
       setupVolume();
+      return -1;
+    }
+
+    if(touchedRect(x, y, &rMenuScreen3)) {
+      Serial.println("Touched menu clock setup");
+      showClockSetupScreen();
       return -1;
     }
   }

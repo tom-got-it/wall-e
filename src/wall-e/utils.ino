@@ -31,6 +31,12 @@ void drawEmptyMainScreen() {
   tft.setTextColor(TFT_MAIN_COLOR, TFT_BLACK);
 }
 
+
+void showEmptyDelayScreen(int delayMs) {
+  clearScreen();
+  delay(delayMs);
+}
+
 void turnOnDisplay() {
   digitalWrite(PIN_LCD_LED, HIGH);
 }
