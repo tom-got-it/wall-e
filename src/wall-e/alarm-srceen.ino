@@ -117,10 +117,13 @@ int handleAlarmScreen() {
     } else {
       //We only test if MP3 is still playing when the MP3 module is ready to receive the next command.
       //This makes the alarm-loop more responsive for touch events
-      if(waitMp3Ready(true)) {
+      if(testMp3Ready(false)) {
+        Serial.println("Testing whether MP3 is playing...");
         if(!isMp3Playing()) {
           playMp3RandomAlarm();
         }
+      } else {
+        delay(80);
       }
     }
 
@@ -189,6 +192,7 @@ int handleAlarmTouchEvents(boolean isAlarmScreen) {
   }
 
   if(touched && !alarmDisplayIsOn) {
+    Serial.println("turning on display after touch");
     alarmDisplayIsOn = true;
     turnOnDisplay();
     delay(120);
@@ -210,6 +214,7 @@ int handleAlarmTouchEvents(boolean isAlarmScreen) {
 
   //No button touched
   if(touched && isAlarmScreen) {
+    Serial.println("alarm screen touched (no button touched)");
     return pAlarmTouchAction;
   }
 

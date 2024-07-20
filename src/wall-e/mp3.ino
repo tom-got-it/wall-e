@@ -1,6 +1,6 @@
 DateTime mp3UtilLastCommandDate;
-u_long mp3UtilLastCommandMillis;            //this number will overflow after ~49 days
-const u_long mp3UtilWaitTimeMillis = 800;   //time to wait between two commandsto the MP3 module
+long mp3UtilLastCommandMillis;
+const u_long mp3UtilWaitTimeMillis = 900;   //time to wait between two commands to the MP3 module
 
 void initMp3Utils() {
   mp3UtilLastCommandDate = DateTime(rtc.now().unixtime() - 2);
@@ -10,10 +10,8 @@ void initMp3Utils() {
 /**
 * We must wait at least some time between sending two commands to the MP3 module.
 * This thing is crazy slow :-(
-* In test-mode this method does not wait, but returns false when required to wait.
-* Additionally the test-mode is not considered as a mp3 command.
 */
-boolean waitMp3Ready(boolean testMode) {
+boolean testMp3Ready(boolean waitUntilReady) {
   boolean skipped = false;
   DateTime now = rtc.now();
   int timeDiffSeconds = now.unixtime() - mp3UtilLastCommandDate.unixtime();
@@ -28,8 +26,8 @@ boolean waitMp3Ready(boolean testMode) {
     }
 
     if(currentWaitTimeMillis > 0 && currentWaitTimeMillis <= mp3UtilWaitTimeMillis) {
-      if(testMode) {
-        skipped = true;
+      if(! waitUntilReady) {
+        return false;
       } else {
         Serial.print("Delay due to waiting for MP3 module to accept the next command: ");
         Serial.print(currentWaitTimeMillis);
@@ -39,46 +37,48 @@ boolean waitMp3Ready(boolean testMode) {
     }
   }
 
-  if(skipped) {
-    return false;
-  }
-
-  if(!testMode) {
-    mp3UtilLastCommandDate = rtc.now();
-    mp3UtilLastCommandMillis = millis();
-  }
-
   return true;
 }
 
+void mp3CommandExecuted() {
+  mp3UtilLastCommandDate = rtc.now();
+  mp3UtilLastCommandMillis = millis();
+}
+
 boolean isMp3Playing() {
-  waitMp3Ready(false);
-  return myMP3.isPlaying();
+  testMp3Ready(true);
+  boolean playing =  myMP3.isPlaying();
+  mp3CommandExecuted();
+  return playing;
 }
 
 void setMp3Volume(int volume) {
-  waitMp3Ready(false);
+  testMp3Ready(true);
   myMP3.volume(volume);
+  mp3CommandExecuted();
 }
 
 void playMp3RandomFile() {
   if(mp3TrackCount > 0) {
-    waitMp3Ready(false);
+    testMp3Ready(true);
     myMP3.playFolder(1, random(1, mp3TrackCount + 1));
+    mp3CommandExecuted();
   }
 }
 
 void playMp3RandomBootSound() {
   if(mp3TrackCount > 0) {
-    waitMp3Ready(false);
+    testMp3Ready(true);
     playMp3File(random(1, min(gMp3CountInitSound, mp3TrackCount) + 1));
+    mp3CommandExecuted();
   }
 }
 
 void playMp3RandomAlarm() {
   if(mp3TrackCount > gMp3CountInitSound) {
-    waitMp3Ready(false);
+    testMp3Ready(true);
     myMP3.playFolder(1, random(gMp3CountInitSound + 1, mp3TrackCount + 1));
+    mp3CommandExecuted();
   } else {
     //If no other MP3 is avalable, play the boot sounds
     playMp3RandomBootSound();
@@ -87,19 +87,23 @@ void playMp3RandomAlarm() {
 
 void playMp3File(int fileNumber) {
   if(fileNumber <= mp3TrackCount) {
-    waitMp3Ready(false);
+    testMp3Ready(true);
     myMP3.playFolder(1, fileNumber);
+    mp3CommandExecuted();
   }
 }
 
 void stopMp3Playback() {
-  waitMp3Ready(false);
+  testMp3Ready(true);
   myMP3.stop();
+  mp3CommandExecuted();
 }
 
 int getMp3TrackCount() {
-  waitMp3Ready(false);
-  return myMP3.numSdTracks();
+  testMp3Ready(true);
+  int num = myMP3.numSdTracks();
+  mp3CommandExecuted();
+  return num;
 }
 
 int getMp3MaxPossibleVolume() {
