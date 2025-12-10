@@ -18,7 +18,7 @@ void showMenuScreen() {
 }
 
 void loopMenuScreen() {
-  uint menuScreen = 0; //-1 = Exit, 0 = Main, 1 = Setup
+  int menuScreen = 0; //-1 = Exit, 0 = Main, 1 = Setup
   while(true) {
     if(isAlarmClockTriggered()) {
       Serial.println("Leaving menu screen because an alarm has fired");
@@ -32,7 +32,7 @@ void loopMenuScreen() {
       return;
     }
 
-    uint nextScreen;
+    int nextScreen;
     if(menuScreen == 0) {
       nextScreen = handleMenuScreenMain();
     } else {
@@ -90,7 +90,7 @@ void printMenuScreenSetup() {
   printRect(&rMenuScreen3, TFT_MAIN_COLOR, false);
 }
 
-uint handleMenuScreenMain() {
+int handleMenuScreenMain() {
   uint16_t x,y;
   boolean touched = tft.getTouch(&x, &y);
   if(touched) {
@@ -132,7 +132,7 @@ uint handleMenuScreenMain() {
   return 0;
 }
 
-uint handleMenuScreenSetup() {
+int handleMenuScreenSetup() {
   uint16_t x,y;
   boolean touched = tft.getTouch(&x, &y);
   if(touched) {
