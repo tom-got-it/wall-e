@@ -119,6 +119,7 @@ Due to my modifications, you will need the following additional hardware:
 * USP 18650 Lithium-Ion Battery charger with integrated 5V boost:
   * <https://www.amazon.de/dp/B0B6SPMJZB>
     * tested and works flawlessly
+    * Important: Amazon seems to sell the version with soldered battery holder now - This version does not fit - you can try to desolder the battery box, though.
   * or <https://de.aliexpress.com/item/1005005714456736.html>
     * not yet tested
     * make sure to buy the “5V module” version
